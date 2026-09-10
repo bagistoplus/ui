@@ -43,7 +43,7 @@ export class UIAccordionItemTrigger extends ItemPart {
    * trigger is not even reachable.
    */
   override render(api: accordion.Api): void {
-    if (!this.delegate.enabled && !this.#warned) {
+    if (!this.delegation.enabled && !this.#warned) {
       this.#warned = true;
       console.warn(
         `[@bagistoplus/ui] <${this.localName}> needs the \`delegate\` attribute and a <button> child. ` +
@@ -91,7 +91,7 @@ export class UIAccordionItemContent extends ItemPart {
     }
 
     const props = this.propsFor(api, item);
-    const node = this.delegate.target();
+    const node = this.delegation.target();
 
     if (!props || !node) {
       return;
@@ -101,7 +101,7 @@ export class UIAccordionItemContent extends ItemPart {
 
     const expanded = api.getItemState({ value: item.value!, disabled: item.disabled }).expanded;
 
-    this.delegate.apply(this.#presence.decorate(node, props, expanded), this.scopeFor(item));
+    this.delegation.apply(this.#presence.decorate(node, props, expanded), this.scopeFor(item));
   }
 
   protected override release(): void {

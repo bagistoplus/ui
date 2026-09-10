@@ -676,3 +676,30 @@ describe("editor operations", () => {
     expect(document.activeElement).toBe(triggers(host)[1]);
   });
 });
+
+describe("property reflection", () => {
+  it("reflects value and disabled assigned as properties", async () => {
+    const host = await mount(`
+      <ui-accordion collapsible>
+        <ui-accordion-item>
+          <ui-accordion-item-trigger delegate><button>a</button></ui-accordion-item-trigger>
+          <ui-accordion-item-content><div>body</div></ui-accordion-item-content>
+        </ui-accordion-item>
+      </ui-accordion>
+    `);
+
+    const item = host.querySelector<any>("ui-accordion-item")!;
+
+    // A framework decides between setAttribute and a property assignment with
+    // `key in el`, so a getter with no setter silently drops the write.
+    item.value = "a";
+    await frames();
+
+    expect(item.getAttribute("value")).toBe("a");
+    expect(item.dataset.part).toBe("item");
+
+    item.disabled = true;
+    await frames();
+    expect(item.hasAttribute("disabled")).toBe(true);
+  });
+});

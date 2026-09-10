@@ -35,6 +35,7 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
   #id: string | undefined;
 
   #machine: VanillaMachine<any> | undefined;
+  #started = false;
   #api: TApi | undefined;
   #unsubscribe: (() => void) | undefined;
   #frame = 0;
@@ -64,7 +65,7 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
 
   connectedCallback(): void {
     this.#delegate.observe();
-    this.#start();
+    this.#create();
     this.scheduleRender();
   }
 
@@ -158,7 +159,13 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
     this.dispatchEvent(new CustomEvent(`ui-${this.componentName}:${name}`, { detail, bubbles: true }));
   }
 
-  #start(): void {
+  /**
+   * Builds the machine and connects an api, but does NOT start it.
+   *
+   * `connect()` works on an unstarted service: the ids come from the scope and
+   * the state is the initial one, which is exactly what the first render needs.
+   */
+  #create(): void {
     if (this.#machine) {
       return;
     }
@@ -171,7 +178,6 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
       this.scheduleRender();
     });
 
-    machine.start();
     this.#api = this.connect(machine);
   }
 
@@ -187,6 +193,7 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
     this.#unsubscribe = undefined;
     this.#machine = undefined;
     this.#api = undefined;
+    this.#started = false;
   }
 
   #render(): void {
@@ -204,6 +211,11 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
 
     for (const child of this.#children) {
       child.render(api);
+    }
+
+    if (!this.#started && this.#machine) {
+      this.#started = true;
+      this.#machine.start();
     }
   }
 }

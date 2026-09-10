@@ -10,7 +10,17 @@ You supply the markup and the CSS. The package supplies state, keyboard handling
 
 ```js
 import "@bagistoplus/ui/accordion";
+import "@bagistoplus/ui/tabs";
 ```
+
+Each component is its own entry point, so you ship only what you use.
+
+| Component | Import | Elements |
+| --- | --- | --- |
+| Accordion | `@bagistoplus/ui/accordion` | `ui-accordion`, `ui-accordion-item`, `ui-accordion-item-trigger`, `ui-accordion-item-content`, `ui-accordion-item-indicator` |
+| Tabs | `@bagistoplus/ui/tabs` | `ui-tabs`, `ui-tabs-list`, `ui-tabs-trigger`, `ui-tabs-content`, `ui-tabs-indicator` |
+
+The examples below use the accordion. Everything they show about `delegate`, styling and the api applies to both.
 
 ```html
 <ui-accordion collapsible default-value="shipping">
@@ -182,7 +192,7 @@ Everything in it sits in an `@layer ui`, so it loses to any unlayered CSS you wr
 
 ## Element names
 
-The elements register as `ui-accordion` and friends. Custom element names are a global registry, so if something else on your page already owns `ui-accordion`, this package warns in the console and does not install. Nothing inside the package depends on the names, so renaming them is a change at one line in `src/accordion/index.ts`.
+The elements register as `ui-accordion` and friends. Custom element names are a global registry, so if something else on your page already owns `ui-accordion`, this package warns in the console and does not install. Nothing inside the package depends on the names, so renaming them is a change at one line in each component's `index.ts`.
 
 ## Development
 

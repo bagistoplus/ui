@@ -45,7 +45,10 @@ export default defineConfig({
       },
       {
         text: "Components",
-        items: [{ text: "Accordion", link: "/components/accordion" }],
+        items: [
+          { text: "Accordion", link: "/components/accordion" },
+          { text: "Tabs", link: "/components/tabs" },
+        ],
       },
     ],
 

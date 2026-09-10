@@ -124,7 +124,19 @@ export abstract class ZagPart<TApi, TOwner extends PartOwner>
     return this.#owner;
   }
 
-  protected get delegate(): Delegate {
+  /**
+   * Named `delegation`, not `delegate`, and that is not cosmetic.
+   *
+   * TypeScript's `protected` is erased, so this accessor is a real property on
+   * the prototype at runtime. `delegate` is also an attribute consumers write,
+   * and a framework choosing between `setAttribute` and a property assignment
+   * tests `key in el`. A property of the same name makes it pick the property,
+   * write to a getter, and lose the attribute entirely.
+   *
+   * The rule this follows: no attribute name may be shadowed by a class
+   * property, unless that property reflects back to the attribute.
+   */
+  protected get delegation(): Delegate {
     return this.#delegate;
   }
 

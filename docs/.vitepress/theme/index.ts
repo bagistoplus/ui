@@ -17,7 +17,8 @@ export default {
     // `customElements.define` runs at module scope, so importing this during
     // the static build would throw `customElements is not defined`.
     if (!import.meta.env.SSR) {
-      import("../../../src/accordion/index.js");
+      import("../../../src/accordion/index");
+      import("../../../src/tabs/index");
     }
   },
 } satisfies Theme;

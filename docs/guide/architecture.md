@@ -27,11 +27,17 @@ protected abstract connect(machine: VanillaMachine<any>): TApi;
 protected abstract machineProps(): TProps;
 ```
 
-Two behaviours worth knowing:
+Three behaviours worth knowing:
+
+**The machine is built on connect and started after the first render.** `connect()` works on an unstarted service, since the ids come from the scope and the state is the initial one, which is all the first render needs. `machine.start()` then runs at the end of that render.
+
+The order matters because `start()` runs the machine's entry actions **synchronously**, and some of them query the DOM. Zag's tabs machine measures the selected trigger there and attaches the observers that keep the measurement fresh. A custom element connects before its children are parsed, so starting in `connectedCallback` ran all of that against an empty element, and the action bailed rather than retrying: the indicator stayed invisible until the first selection change, and never tracked a resize at all.
+
+Every other Zag binding is already ordered this way. React calls `connect()` during render, commits the DOM, and starts the machine from an effect. This is the same sequence with an animation frame in place of the effect.
 
 **Renders are coalesced onto one animation frame.** Mounting registers every child and every part separately, so rendering per registration would be O(children × parts). Measured on 50 items and 150 parts, coalescing turns roughly 200 registrations into 2 renders.
 
-**A disconnect is not a removal.** A DOM differ moves nodes, so `disconnectedCallback` defers one microtask and bails if the element is connected again by then. `#start()` returns early when a machine already exists, so state is never rebuilt on reconnect.
+**A disconnect is not a removal.** A DOM differ moves nodes, so `disconnectedCallback` defers one microtask and bails if the element is connected again by then. Machine creation returns early when one already exists, so state is never rebuilt on reconnect.
 
 ### `part.ts`
 

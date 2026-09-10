@@ -23,12 +23,35 @@ export class UIAccordionItem extends ZagPart<accordion.Api, UIAccordion> {
     return this.owner;
   }
 
+  /**
+   * Reflected, because a property assignment must reach the attribute.
+   *
+   * Any framework that renders these elements decides between `setAttribute`
+   * and a property assignment by testing `key in el`, so declaring a getter is
+   * what makes `value` a property in the first place. Without a setter the
+   * write lands on a getter-only property and is lost, leaving the element with
+   * no value at all: Vue's client-side render does exactly this, so the markup
+   * works from server HTML and silently does nothing after a route change.
+   */
   get value(): string | null {
     return this.getAttribute("value");
   }
 
+  set value(next: string | null) {
+    if (next == null) {
+      this.removeAttribute("value");
+      return;
+    }
+
+    this.setAttribute("value", next);
+  }
+
   get disabled(): boolean {
     return this.hasAttribute("disabled");
+  }
+
+  set disabled(next: boolean) {
+    this.toggleAttribute("disabled", Boolean(next));
   }
 
   protected get ownerBrand(): symbol {
