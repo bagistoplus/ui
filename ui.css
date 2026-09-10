@@ -1,0 +1,55 @@
+/*
+ * @bagistoplus/ui base styles.
+ *
+ * Load this in the document head, not from JavaScript. The `:not(:defined)`
+ * rules exist to stop a panel painting open before its element upgrades, and a
+ * stylesheet adopted on import arrives after that paint has already happened.
+ *
+ * Nothing here is decorative. Every rule is either a display default the
+ * browser gets wrong for custom elements, or a pre-upgrade guard.
+ */
+
+/*
+ * Everything below is a DEFAULT, so it lives in a cascade layer and loses to
+ * any unlayered CSS you write. Load this file BEFORE your own stylesheet: the
+ * browser orders layers by first appearance, so importing it first is what lets
+ * a `flex` or `hidden` utility beat the display defaults here.
+ */
+@layer ui {
+  /* Containers take Zag props on themselves, so they are real boxes. */
+  ui-accordion,
+  ui-accordion-item {
+    display: block;
+  }
+
+  /* `:not([hidden])` is not optional. Zag applies `hidden` to this element, and
+     `[hidden] { display: none }` is a USER AGENT rule, so any author rule here
+     would beat it and leave a closed panel visible and still tabbable. Every
+     display rule you write for this element needs the same guard. */
+  ui-accordion-item-content:not([hidden]):not([delegate]) {
+    display: block;
+  }
+
+  /* A box too, but an inline one: it sits in the trigger's flex row, and a
+     transform cannot apply to display:contents. */
+  ui-accordion-item-indicator {
+    display: inline-flex;
+  }
+
+  /* Before upgrade there is no `hidden` attribute yet, so every panel would
+     paint open and then collapse. */
+  ui-accordion:not(:defined) ui-accordion-item-content {
+    display: none;
+  }
+
+  /* `delegate` hands Zag's props to the single element child, so the host must
+     cost no layout of its own. Last in the layer, and every rule above it that
+     could match a delegating host carries `:not([delegate])`. */
+  ui-accordion[delegate],
+  ui-accordion-item[delegate],
+  ui-accordion-item-trigger[delegate],
+  ui-accordion-item-content[delegate],
+  ui-accordion-item-indicator[delegate] {
+    display: contents;
+  }
+}

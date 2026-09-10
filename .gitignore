@@ -1,0 +1,12 @@
+node_modules
+dist
+*.tsbuildinfo
+
+# vitest browser artifacts
+.vitest
+
+playground
+
+# VitePress
+docs/.vitepress/cache
+docs/.vitepress/dist
