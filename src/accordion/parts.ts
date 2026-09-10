@@ -1,9 +1,9 @@
 import type * as accordion from "@zag-js/accordion";
 
-import { ZagPart } from "../core/part.js";
-import { PresenceController } from "../core/presence.js";
-import { ACCORDION_ITEM } from "./brands.js";
-import type { UIAccordionItem } from "./item.js";
+import { ZagPart } from "../core/part";
+import { PresenceController } from "../core/presence";
+import { ACCORDION_ITEM } from "./brands";
+import type { UIAccordionItem } from "./item";
 
 type Props = Record<string, unknown>;
 
@@ -27,8 +27,12 @@ abstract class ItemPart extends ZagPart<accordion.Api, UIAccordionItem> {
 export class UIAccordionItemTrigger extends ItemPart {
   #warned = false;
 
-  protected propsFor(api: accordion.Api, item: UIAccordionItem): Props {
-    return api.getItemTriggerProps({ value: item.value!, disabled: item.disabled }) as Props;
+  protected propsFor(api: accordion.Api, item: UIAccordionItem): Props | null {
+    const value = item.value;
+
+    return value
+      ? (api.getItemTriggerProps({ value, disabled: item.disabled }) as Props)
+      : null;
   }
 
   /**
@@ -38,7 +42,7 @@ export class UIAccordionItemTrigger extends ItemPart {
    * `<button>` provides them. There is no `tabindex` either, so a container
    * trigger is not even reachable.
    */
-  override render(api: accordion.Api, item: UIAccordionItem): void {
+  override render(api: accordion.Api): void {
     if (!this.delegate.enabled && !this.#warned) {
       this.#warned = true;
       console.warn(
@@ -47,40 +51,54 @@ export class UIAccordionItemTrigger extends ItemPart {
       );
     }
 
-    super.render(api, item);
+    super.render(api);
   }
 }
 
 export class UIAccordionItemIndicator extends ItemPart {
-  protected propsFor(api: accordion.Api, item: UIAccordionItem): Props {
-    return api.getItemIndicatorProps({ value: item.value!, disabled: item.disabled }) as Props;
+  protected propsFor(api: accordion.Api, item: UIAccordionItem): Props | null {
+    const value = item.value;
+
+    return value
+      ? (api.getItemIndicatorProps({ value, disabled: item.disabled }) as Props)
+      : null;
   }
 }
 
 export class UIAccordionItemContent extends ItemPart {
   #presence: PresenceController | undefined;
 
-  protected propsFor(api: accordion.Api, item: UIAccordionItem): Props {
-    return api.getItemContentProps({ value: item.value!, disabled: item.disabled }) as Props;
+  protected propsFor(api: accordion.Api, item: UIAccordionItem): Props | null {
+    const value = item.value;
+
+    return value
+      ? (api.getItemContentProps({ value, disabled: item.disabled }) as Props)
+      : null;
   }
 
-  override render(api: accordion.Api, item: UIAccordionItem): void {
-    if (!item.presenceEnabled) {
-      this.#presence?.stop();
-      this.#presence = undefined;
-      super.render(api, item);
+  override render(api: accordion.Api): void {
+    const item = this.owner;
+
+    if (!item) {
       return;
     }
 
+    if (!item.presenceEnabled) {
+      this.#presence?.stop();
+      this.#presence = undefined;
+      super.render(api);
+      return;
+    }
+
+    const props = this.propsFor(api, item);
     const node = this.delegate.target();
 
-    if (!node) {
+    if (!props || !node) {
       return;
     }
 
     this.#presence ??= new PresenceController(() => item.scheduleRender());
 
-    const props = this.propsFor(api, item);
     const expanded = api.getItemState({ value: item.value!, disabled: item.disabled }).expanded;
 
     this.delegate.apply(this.#presence.decorate(node, props, expanded), this.scopeFor(item));

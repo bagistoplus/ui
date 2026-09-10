@@ -1,9 +1,9 @@
 import * as accordion from "@zag-js/accordion";
 import { VanillaMachine, normalizeProps } from "@zag-js/vanilla";
 
-import { listAttribute, readDirection } from "../core/dom.js";
-import { ZagRootElement } from "../core/root.js";
-import { ACCORDION_ROOT } from "./brands.js";
+import { listAttribute, readDirection } from "../core/dom";
+import { ZagRootElement } from "../core/root";
+import { ACCORDION_ROOT } from "./brands";
 
 export class UIAccordion extends ZagRootElement<accordion.Props, accordion.Api> {
   static readonly observedAttributes = [

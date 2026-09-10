@@ -1,32 +1,26 @@
 import type * as accordion from "@zag-js/accordion";
 
-import { Delegate } from "../core/delegate";
-import { findBranded } from "../core/dom";
-import type { PartOwner, Renderable } from "../core/root";
+import { ZagPart } from "../core/part";
 import { ACCORDION_ITEM, ACCORDION_ROOT } from "./brands";
-import type { UIAccordionPart } from "./parts";
 import type { UIAccordion } from "./root";
+
+type Props = Record<string, unknown>;
 
 /**
  * The collection layer: one value, and the parts that render it.
  *
- * It is what its parts register with, so it satisfies `PartOwner` by passing
- * through to the root.
+ * It is an ordinary part that happens to own parts. Its own owner is the root,
+ * and `data-part="item"` is as much a part as `data-part="item-trigger"` is.
  */
-export class UIAccordionItem extends HTMLElement implements PartOwner, Renderable<accordion.Api> {
+export class UIAccordionItem extends ZagPart<accordion.Api, UIAccordion> {
   static readonly observedAttributes = ["value", "disabled"];
 
   get [ACCORDION_ITEM](): true {
     return true;
   }
 
-  readonly #parts = new Set<UIAccordionPart>();
-  readonly #delegate = new Delegate(this, () => this.scheduleRender());
-
-  #root: UIAccordion | null = null;
-
   get root(): UIAccordion | null {
-    return this.#root;
+    return this.owner;
   }
 
   get value(): string | null {
@@ -37,73 +31,21 @@ export class UIAccordionItem extends HTMLElement implements PartOwner, Renderabl
     return this.hasAttribute("disabled");
   }
 
-  get scopeKey(): string {
-    return this.#root?.scopeKey ?? "ui-accordion";
+  protected get ownerBrand(): symbol {
+    return ACCORDION_ROOT;
   }
 
-  get presenceEnabled(): boolean {
-    return this.#root?.presenceEnabled ?? false;
+  protected register(owner: UIAccordion): void {
+    owner.registerChild(this);
   }
 
-  scheduleRender(): void {
-    this.#root?.scheduleRender();
+  protected unregister(owner: UIAccordion): void {
+    owner.unregisterChild(this);
   }
 
-  connectedCallback(): void {
-    const root = findBranded<UIAccordion>(this, ACCORDION_ROOT);
-
-    if (this.#root && this.#root !== root) {
-      this.#root.unregisterChild(this);
-    }
-
-    this.#root = root;
-    root?.registerChild(this);
-
-    this.#delegate.observe();
-  }
-
-  disconnectedCallback(): void {
-    queueMicrotask(() => {
-      if (this.isConnected) {
-        return;
-      }
-
-      // Read before the root goes, or `scopeKey` falls back to its default and
-      // releases the wrong scope.
-      const scope = this.scopeKey;
-
-      this.#root?.unregisterChild(this);
-      this.#root = null;
-
-      this.#delegate.disconnect();
-      this.#delegate.release(scope);
-    });
-  }
-
-  attributeChangedCallback(): void {
-    this.#root?.scheduleRender();
-  }
-
-  registerPart(part: UIAccordionPart): void {
-    this.#parts.add(part);
-    this.#root?.scheduleRender();
-  }
-
-  unregisterPart(part: UIAccordionPart): void {
-    this.#parts.delete(part);
-  }
-
-  render(api: accordion.Api): void {
+  protected propsFor(api: accordion.Api): Props | null {
     const value = this.value;
 
-    if (!value || !this.#root) {
-      return;
-    }
-
-    this.#delegate.apply(api.getItemProps({ value, disabled: this.disabled }), this.scopeKey);
-
-    for (const part of this.#parts) {
-      part.render(api, this);
-    }
+    return value ? (api.getItemProps({ value, disabled: this.disabled }) as Props) : null;
   }
 }

@@ -1,7 +1,7 @@
-import { defineElement } from "../core/dom.js";
-import { UIAccordionItem } from "./item.js";
-import { UIAccordionItemContent, UIAccordionItemIndicator, UIAccordionItemTrigger } from "./parts.js";
-import { UIAccordion } from "./root.js";
+import { defineElement } from "../core/dom";
+import { UIAccordionItem } from "./item";
+import { UIAccordionItemContent, UIAccordionItemIndicator, UIAccordionItemTrigger } from "./parts";
+import { UIAccordion } from "./root";
 
 defineElement("ui-accordion", UIAccordion);
 defineElement("ui-accordion-item", UIAccordionItem);

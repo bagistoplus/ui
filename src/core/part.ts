@@ -1,25 +1,50 @@
-import { Delegate } from "./delegate.js";
-import { findBranded } from "./dom.js";
-import type { PartOwner } from "./root.js";
+import { Delegate } from "./delegate";
+import { findBranded } from "./dom";
+import type { PartOwner, Renderable } from "./root";
 
 type Props = Record<string, unknown>;
 
 /**
- * A part of a component, other than its root.
+ * Every element of a component except its root.
  *
  * A part finds its owner on connect and registers with it; the owner drives
  * rendering from there. The owner is found by a brand rather than a tag name
  * or `instanceof`, so a page that loaded the package twice still works.
  *
- * Where the props land is not the part's decision. The consumer makes it, with
- * `delegate`, and `Delegate` answers it the same way for every element.
+ * The owner is the root, or another part. Nothing here needs to know which,
+ * and that is the point: an accordion groups a trigger and a panel under an
+ * item, a tabs list holds triggers whose panels are somewhere else entirely,
+ * and both are this one class.
+ *
+ * Where the props land is not the part's decision either. The consumer makes
+ * it, with `delegate`, and `Delegate` answers it the same way for every
+ * element.
  */
-export abstract class ZagPart<TApi, TOwner extends PartOwner> extends HTMLElement {
-  readonly #delegate = new Delegate(this, () => this.owner?.scheduleRender());
+export abstract class ZagPart<TApi, TOwner extends PartOwner>
+  extends HTMLElement
+  implements PartOwner, Renderable<TApi>
+{
+  readonly #delegate = new Delegate(this, () => this.scheduleRender());
 
   #owner: TOwner | null = null;
 
+  // Allocated on first use. Most parts never own anything, and an accordion of
+  // 50 items carries 150 of them.
+  #parts: Set<ZagPart<TApi, any>> | undefined;
+
   protected scope: string | undefined;
+
+  get scopeKey(): string {
+    return this.#owner?.scopeKey ?? this.localName;
+  }
+
+  get presenceEnabled(): boolean {
+    return this.#owner?.presenceEnabled ?? false;
+  }
+
+  scheduleRender(): void {
+    this.#owner?.scheduleRender();
+  }
 
   connectedCallback(): void {
     const owner = findBranded<TOwner>(this, this.ownerBrand);
@@ -38,8 +63,9 @@ export abstract class ZagPart<TApi, TOwner extends PartOwner> extends HTMLElemen
   }
 
   disconnectedCallback(): void {
-    // A morph moves nodes, so a disconnect is not a removal. Wait one
-    // microtask: a move is already back in the document by then.
+    // A morph moves nodes, and so does the editor when it reorders a list, so
+    // a disconnect is not a removal. Wait one microtask: a move is already
+    // back in the document by then.
     queueMicrotask(() => {
       if (this.isConnected) {
         return;
@@ -55,8 +81,43 @@ export abstract class ZagPart<TApi, TOwner extends PartOwner> extends HTMLElemen
     });
   }
 
-  render(api: TApi, owner: TOwner): void {
-    this.#delegate.apply(this.propsFor(api, owner), this.scopeFor(owner));
+  attributeChangedCallback(): void {
+    this.scheduleRender();
+  }
+
+  registerPart(part: ZagPart<TApi, any>): void {
+    this.#parts ??= new Set();
+    this.#parts.add(part);
+    this.scheduleRender();
+  }
+
+  unregisterPart(part: ZagPart<TApi, any>): void {
+    this.#parts?.delete(part);
+  }
+
+  render(api: TApi): void {
+    const owner = this.#owner;
+
+    if (!owner) {
+      return;
+    }
+
+    const props = this.propsFor(api, owner);
+
+    // `null` is never "no props": every Zag part returns at least data-scope
+    // and data-part. It means this element is not in a renderable state, and
+    // nothing below it can be either, so the whole subtree is skipped.
+    if (!props) {
+      return;
+    }
+
+    this.#delegate.apply(props, this.scopeFor(owner));
+
+    if (this.#parts) {
+      for (const part of this.#parts) {
+        part.render(api);
+      }
+    }
   }
 
   protected get owner(): TOwner | null {
@@ -74,7 +135,7 @@ export abstract class ZagPart<TApi, TOwner extends PartOwner> extends HTMLElemen
 
   protected abstract unregister(owner: TOwner): void;
 
-  protected abstract propsFor(api: TApi, owner: TOwner): Props;
+  protected abstract propsFor(api: TApi, owner: TOwner): Props | null;
 
   protected scopeFor(owner: TOwner): string {
     this.scope = owner.scopeKey;

@@ -31,6 +31,22 @@ So the decision is the consumer's, per element, and the default is the one that 
 
 A delegating host with no element child renders nothing and waits, because during HTML parsing it connects before its child exists. One with more than one element child warns and uses the first.
 
+## A part has an owner, and may own parts
+
+There are two classes. `ZagRootElement` owns a machine and has no owner. `ZagPart` is everything else, and its owner is the root **or another part**.
+
+The accordion suggested a third shape. `ui-accordion-item` groups a value with the parts that render it, so it was written as its own kind of element, hand-implementing `PartOwner` beside a separate `ZagPart` hierarchy, and `ZagPart.render(api, owner)` took an owner argument that only a collection layer ever passed.
+
+Tabs showed that was a generalisation from one example. Its anatomy is `root, list, trigger, content, indicator`, with triggers inside the list and panels as siblings of it, so a trigger and its panel live in **different subtrees** and each carries its own `value`. There is nothing to group them under. Building tabs on the earlier core meant either a second registration path for parts that hang off the root, or a fake collection layer wrapping nothing.
+
+So the collection layer is not a kind of element. It is a part that happens to own parts, which any part may do. `data-part="item"` is as much a part as `data-part="item-trigger"`, and `findBranded` already means "nearest branded ancestor", which is the same question whether the answer is the root or an item.
+
+The owner argument went with it. It was always redundant, since the only caller passed `this`, which is what the part's own `findBranded` had already resolved. `render(api)` reads `this.owner`, which makes `ZagPart` satisfy `Renderable` exactly, and the distinction between "a part under a collection layer" and "a part under the root" stops existing.
+
+`propsFor()` returns `Props | null` in place of the item's early return, and `null` skips the **whole subtree**. It cannot mean "no props", because every Zag part returns at least `data-scope` and `data-part`. It means the element is not in a renderable state, and there is no version of that where the parts below it are fine.
+
+This is the third turn of the same argument the section above records. A rule too uniform to be safe, then a boundary too fixed to generalise, and in both cases the fix was to find the thing that was actually invariant. Here it is that a part has an owner. Everything else was the accordion's shape mistaken for the library's.
+
 ### `hidden` outranks a layered display default
 
 Zag applies `hidden` to the content element at rest. `[hidden] { display: none }` is a **user agent** rule, so any author rule beats it, `@layer ui` included. `ui-accordion-item-content { display: block }` therefore left closed panels visible and still in the tab order, which is the exact defect this package exists to fix.

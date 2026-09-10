@@ -104,6 +104,25 @@ function bind(el: Element, record: Applied, key: string): void {
   el.addEventListener(type, listener);
 }
 
+/** Custom properties pass through untouched; everything else is camelCase. */
+function styleToCss(style: Record<string, unknown>): string {
+  const declarations: string[] = [];
+
+  for (const key in style) {
+    const value = style[key];
+
+    if (value == null || value === "") {
+      continue;
+    }
+
+    const name = key.startsWith("--") ? key : key.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
+
+    declarations.push(`${name}: ${String(value)}`);
+  }
+
+  return declarations.join("; ");
+}
+
 function write(el: Element, key: string, value: unknown): void {
   if (key === "class") {
     if (el.className !== value) {
@@ -111,6 +130,10 @@ function write(el: Element, key: string, value: unknown): void {
     }
 
     return;
+  }
+
+  if (key === "style" && value !== null && typeof value === "object") {
+    value = styleToCss(value as Record<string, unknown>);
   }
 
   if (PROPERTIES.has(key)) {

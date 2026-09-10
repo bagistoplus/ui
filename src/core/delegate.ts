@@ -1,4 +1,4 @@
-import { applyProps, releaseProps } from "./props.js";
+import { applyProps, releaseProps } from "./props";
 
 type Props = Record<string, unknown>;
 

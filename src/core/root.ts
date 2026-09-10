@@ -1,6 +1,6 @@
 import type { VanillaMachine } from "@zag-js/vanilla";
 
-import { Delegate } from "./delegate.js";
+import { Delegate } from "./delegate";
 
 type Props = Record<string, unknown>;
 

@@ -35,11 +35,19 @@ Two behaviours worth knowing:
 
 ### `part.ts`
 
-`ZagPart` owns finding the owner by brand, the register / unregister lifecycle, and one `render()`. There are no subclasses: where the props land is not the part's decision, it is the consumer's, and `delegate.ts` answers it the same way for every element.
+`ZagPart` is every element of a component except its root. It owns finding the owner by brand, the register and unregister lifecycle, a `Delegate`, and one `render(api)`.
+
+**A part's owner is the root, or another part, and nothing here needs to know which.** `findBranded` means "nearest branded ancestor", which is the same question either way. That is what lets one class cover both anatomies the package supports: an accordion groups a trigger and a panel under an item, while a tabs list holds triggers whose panels are somewhere else in the tree entirely.
+
+**A part may own parts.** `#parts` allocates on first use, since most parts never own anything and an accordion of 50 items carries 150 of them. `render()` applies its own props, then renders whatever it owns.
+
+`propsFor()` returns `Props | null`, and `null` skips the **whole subtree**. It never means "no props", because every Zag part returns at least `data-scope` and `data-part`. It means the element is not in a renderable state, and nothing below it can be either.
+
+There are no subclasses in the core. Where the props land is not the part's decision, it is the consumer's, and `delegate.ts` answers it the same way for every element.
 
 ### `delegate.ts`
 
-`Delegate` decides which node takes a machine's props. Without `delegate` on the host that is the host itself; with it, the host's single element child. `ZagRootElement`, `UIAccordionItem` and `ZagPart` each own one, so the rule is written once and holds for the root, the collection layer and every part alike.
+`Delegate` decides which node takes a machine's props. Without `delegate` on the host that is the host itself; with it, the host's single element child. `ZagRootElement` and `ZagPart` each own one, which is every element in the package, so the rule is written once and holds everywhere.
 
 The target is resolved on every apply, never cached, and the previous target is released when it changes, so a swapped-out element keeps no stale Zag attributes.
 
@@ -64,6 +72,8 @@ Zag's `hidden` is replaced with a deferred one, never dropped. Dropping it is ex
 That cache holds only while nothing else edits the DOM. A differ patching an element in place removes every attribute the incoming HTML did not carry, and Zag's attributes are all in that category: a server sends no `id`, no `data-scope`, no `data-part`, no `dir`. The element keeps its identity and loses its props, and a cache-backed applier never writes them back. The failure was silent: `getRootEl` stopped resolving and arrow key navigation died, one re-render after load.
 
 So the comparison is against the **live DOM**. The module keeps its own record for only two things the DOM cannot answer: which attributes this scope owns, and event listeners. Listeners are registered once per event type as a stable dispatcher that reads the latest props, because Zag returns fresh closures from every `connect`.
+
+A `style` prop arrives as an **object** from anything Zag positions, and `String()` on that is `[object Object]`. It is serialised back to a CSS declaration string and written as an ordinary attribute, rather than assigned onto `el.style`. That is deliberate: going through the attribute path keeps all three invariants above, so the value is still compared against the live DOM, still tracked for removal, and still restored after a differ strips it. Custom properties pass through untouched, and everything else converts from camelCase.
 
 ### `dom.ts`
 

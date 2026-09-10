@@ -2,9 +2,9 @@ import { userEvent } from "vitest/browser";
 import { afterEach, describe, expect, it } from "vitest";
 
 import "../../ui.css";
-import "./index.js";
-import type { UIAccordionItem } from "./item.js";
-import type { UIAccordion } from "./root.js";
+import "./index";
+import type { UIAccordionItem } from "./item";
+import type { UIAccordion } from "./root";
 
 const hosts: HTMLElement[] = [];
 const styles: HTMLStyleElement[] = [];
