@@ -19,6 +19,7 @@ export default {
     if (!import.meta.env.SSR) {
       import("../../../src/accordion/index");
       import("../../../src/dialog/index");
+      import("../../../src/menu/index");
       import("../../../src/popover/index");
       import("../../../src/tabs/index");
     }

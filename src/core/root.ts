@@ -71,6 +71,14 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
     return boolAttribute(this, "presence") ?? false;
   }
 
+  /**
+   * The running service, for a root that has to hand it to another machine.
+   * Zag links a submenu to its parent with `setChild(service)`, not with an api.
+   */
+  protected get service(): VanillaMachine<any>["service"] | undefined {
+    return this.#machine?.service;
+  }
+
   connectedCallback(): void {
     this.#delegate.observe();
     this.scheduleRender();
@@ -255,6 +263,15 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
    */
   protected afterRender(_api: TApi): void {}
 
+  /**
+   * Runs once, right after the machine has started.
+   *
+   * `afterRender` cannot do this job: `send` on a machine that has not started
+   * is a no-op, and everything that links two machines is a `send`. A submenu
+   * registers with its parent here, and nowhere earlier.
+   */
+  protected afterStart(_api: TApi): void {}
+
   protected emit(name: string, detail: unknown): void {
     this.dispatchEvent(new CustomEvent(`ui-${this.componentName}:${name}`, { detail, bubbles: true }));
   }
@@ -356,6 +373,7 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
       if (!this.#started && this.#machine) {
         this.#started = true;
         this.#machine.start();
+        this.afterStart(api);
       }
     } finally {
       this.#rendering = false;

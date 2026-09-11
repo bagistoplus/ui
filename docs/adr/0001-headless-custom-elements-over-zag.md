@@ -176,6 +176,16 @@ So `ui-dialog` also has `show()` and `hide()`. After the first frame they call `
 
 This is deliberately not a controlled `open` attribute. Zag's controlled mode buys exactly one thing, the ability to veto a close, and no consumer vetoes. Everything else it appears to buy, such as opening from an element outside the dialog, is `show()`.
 
+## A nested component links to its ancestor after both have started
+
+Zag's menu has one machine for a menu and a submenu. What makes one a submenu is being told its parent at runtime: `childApi.setParent(parentService)` and `parentApi.setChild(childService)`. Both are `send` calls, and `VanillaMachine.send` returns early on a machine that has not started. Zag's own examples run the two calls from an effect wrapped in a `setTimeout` for exactly this reason.
+
+The package starts a machine at the end of its first render, after `afterRender`. So a hook that runs after `start()` is the only correct place for the link, and `afterStart()` exists for that one job. The parent has always started first: it connected first during parsing, so its frame ran first.
+
+Which menu is the parent is a fact the DOM already states. A `ui-menu` whose nearest `ui-menu` ancestor exists is a submenu, found with the same `findBranded` walk every part uses. No `parent` attribute, and no `ui-submenu` tag: a second tag would say in a name what `setParent` already says, and would claim there are exactly two levels when there can be any number.
+
+Two things follow from one element being described by two machines. The submenu's trigger needs the parent's item props merged in, which Zag does in `getTriggerItemProps(childApi)`, a **parent** api call. There is no `ui-menu-trigger-item` element for it: Zag already keys the part name on `isSubmenu` inside `getTriggerProps`, and the trigger makes the same decision one level up, where the parent api is reachable through its owner. And that element has to re-render on the parent's ticks as well as the child's, since the parent's highlight lands on it. So a submenu registers with its parent as a renderable, and the parent's render pass re-renders the whole submenu with its own api. Zag has no `removeChild`; a stopped submenu stays in the parent's children and every send to it is a no-op.
+
 ## An attribute that is also ARIA gets a prefixed name
 
 Two of Zag's dialog props are `role` and `aria-label`, both of which it writes on the content. Neither can be an attribute of the same name on `ui-dialog`: the host has no role, so `role="alertdialog"` on it is read as ARIA in its own right, and assistive technology then sees an alertdialog wrapping a second alertdialog.

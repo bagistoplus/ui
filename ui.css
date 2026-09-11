@@ -162,6 +162,45 @@
     display: none !important;
   }
 
+  /* Menu. The root takes no Zag part of its own, like the popover root, and a
+     submenu is the same element written inside a parent's content, where it
+     is a plain box between two items. */
+  ui-menu,
+  ui-menu-positioner,
+  ui-menu-item,
+  ui-menu-item-group,
+  ui-menu-separator {
+    display: block;
+  }
+
+  /* Same guard as every other panel, and for the same reason: Zag applies
+     `hidden` here, and `[hidden] { display: none }` is a USER AGENT rule that
+     any author rule would beat, leaving a closed menu visible and still
+     reachable. */
+  ui-menu-content:not([hidden]):not([delegate]) {
+    display: block;
+  }
+
+  /* The text sits in the item's line, beside an indicator when there is one. */
+  ui-menu-item-text {
+    display: inline;
+  }
+
+  ui-menu-trigger,
+  ui-menu-indicator,
+  ui-menu-item-indicator,
+  ui-menu-arrow,
+  ui-menu-arrow-tip {
+    display: inline-flex;
+  }
+
+  /* Before upgrade there is no `hidden` on the content yet, so the panel would
+     paint open and then vanish. `default-open` is the one case where hiding it
+     until the bundle runs would be wrong rather than merely early. */
+  ui-menu:not(:defined):not([default-open]) ui-menu-positioner {
+    display: none;
+  }
+
   /* `delegate` hands Zag's props to the single element child, so the host must
      cost no layout of its own. Last in the layer, and every rule above it that
      could match a delegating host carries `:not([delegate])`. */
@@ -193,7 +232,20 @@
   ui-dialog-content[delegate],
   ui-dialog-title[delegate],
   ui-dialog-description[delegate],
-  ui-dialog-close-trigger[delegate] {
+  ui-dialog-close-trigger[delegate],
+  ui-menu[delegate],
+  ui-menu-trigger[delegate],
+  ui-menu-indicator[delegate],
+  ui-menu-positioner[delegate],
+  ui-menu-content[delegate],
+  ui-menu-arrow[delegate],
+  ui-menu-arrow-tip[delegate],
+  ui-menu-item[delegate],
+  ui-menu-item-text[delegate],
+  ui-menu-item-indicator[delegate],
+  ui-menu-item-group[delegate],
+  ui-menu-item-group-label[delegate],
+  ui-menu-separator[delegate] {
     display: contents;
   }
 }
