@@ -201,6 +201,48 @@
     display: none;
   }
 
+  /* Navigation menu. Zag writes `position: relative` on the list, which makes
+     it the box a trigger's rect is measured against, and the root carries the
+     `--trigger-*` and `--viewport-*` custom properties. */
+  ui-navigation-menu,
+  ui-navigation-menu-list,
+  ui-navigation-menu-item,
+  ui-navigation-menu-viewport-positioner,
+  ui-navigation-menu-viewport-proxy {
+    display: block;
+  }
+
+  /* Same guard as every other panel, and for the same reason: Zag applies
+     `hidden` to both, and `[hidden] { display: none }` is a USER AGENT rule
+     that any author rule would beat. */
+  ui-navigation-menu-content:not([hidden]):not([delegate]),
+  ui-navigation-menu-viewport:not([hidden]):not([delegate]) {
+    display: block;
+  }
+
+  /* Zag writes the visually hidden style inline on the trigger proxy; it needs
+     a box to write it on. */
+  ui-navigation-menu-trigger-proxy {
+    display: block;
+  }
+
+  ui-navigation-menu-trigger,
+  ui-navigation-menu-link,
+  ui-navigation-menu-indicator,
+  ui-navigation-menu-item-indicator,
+  ui-navigation-menu-arrow {
+    display: inline-flex;
+  }
+
+  /* Before upgrade there is no `hidden` on a content or the viewport yet, so
+     every panel would paint open and then vanish. `default-value` is the one
+     case where hiding them until the bundle runs would be wrong rather than
+     merely early. */
+  ui-navigation-menu:not(:defined):not([default-value]) ui-navigation-menu-content,
+  ui-navigation-menu:not(:defined):not([default-value]) ui-navigation-menu-viewport {
+    display: none;
+  }
+
   /* `delegate` hands Zag's props to the single element child, so the host must
      cost no layout of its own. Last in the layer, and every rule above it that
      could match a delegating host carries `:not([delegate])`. */
@@ -245,7 +287,20 @@
   ui-menu-item-indicator[delegate],
   ui-menu-item-group[delegate],
   ui-menu-item-group-label[delegate],
-  ui-menu-separator[delegate] {
+  ui-menu-separator[delegate],
+  ui-navigation-menu[delegate],
+  ui-navigation-menu-list[delegate],
+  ui-navigation-menu-item[delegate],
+  ui-navigation-menu-trigger[delegate],
+  ui-navigation-menu-trigger-proxy[delegate],
+  ui-navigation-menu-viewport-proxy[delegate],
+  ui-navigation-menu-item-indicator[delegate],
+  ui-navigation-menu-link[delegate],
+  ui-navigation-menu-content[delegate],
+  ui-navigation-menu-viewport-positioner[delegate],
+  ui-navigation-menu-viewport[delegate],
+  ui-navigation-menu-indicator[delegate],
+  ui-navigation-menu-arrow[delegate] {
     display: contents;
   }
 }

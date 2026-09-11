@@ -20,6 +20,7 @@ export default {
       import("../../../src/accordion/index");
       import("../../../src/dialog/index");
       import("../../../src/menu/index");
+      import("../../../src/navigation-menu/index");
       import("../../../src/popover/index");
       import("../../../src/tabs/index");
     }

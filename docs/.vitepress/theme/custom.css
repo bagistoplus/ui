@@ -375,3 +375,40 @@ th {
     opacity: 0;
   }
 }
+
+/* Navigation menu docs: the viewport example's switch animations. */
+.ui-doc-nav-motion[data-motion="from-start"] {
+  animation: nav-from-start 200ms ease;
+}
+
+.ui-doc-nav-motion[data-motion="from-end"] {
+  animation: nav-from-end 200ms ease;
+}
+
+.ui-doc-nav-motion[data-motion="to-start"] {
+  animation: nav-to-start 200ms ease;
+}
+
+.ui-doc-nav-motion[data-motion="to-end"] {
+  animation: nav-to-end 200ms ease;
+}
+
+@keyframes nav-from-start {
+  from { opacity: 0; transform: translateX(-40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes nav-from-end {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes nav-to-start {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(-40px); }
+}
+
+@keyframes nav-to-end {
+  from { opacity: 1; transform: translateX(0); }
+  to { opacity: 0; transform: translateX(40px); }
+}

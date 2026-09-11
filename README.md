@@ -22,6 +22,7 @@ Each component is its own entry point, so you ship only what you use.
 | Popover | `@bagistoplus/ui/popover` | `ui-popover`, `ui-popover-anchor`, `ui-popover-trigger`, `ui-popover-indicator`, `ui-popover-positioner`, `ui-popover-content`, `ui-popover-title`, `ui-popover-description`, `ui-popover-close-trigger`, `ui-popover-arrow`, `ui-popover-arrow-tip` |
 | Dialog | `@bagistoplus/ui/dialog` | `ui-dialog`, `ui-dialog-trigger`, `ui-dialog-backdrop`, `ui-dialog-positioner`, `ui-dialog-content`, `ui-dialog-title`, `ui-dialog-description`, `ui-dialog-close-trigger` |
 | Menu | `@bagistoplus/ui/menu` | `ui-menu`, `ui-menu-trigger`, `ui-menu-indicator`, `ui-menu-positioner`, `ui-menu-content`, `ui-menu-arrow`, `ui-menu-arrow-tip`, `ui-menu-item`, `ui-menu-item-text`, `ui-menu-item-indicator`, `ui-menu-item-group`, `ui-menu-item-group-label`, `ui-menu-separator` |
+| Navigation Menu | `@bagistoplus/ui/navigation-menu` | `ui-navigation-menu`, `ui-navigation-menu-list`, `ui-navigation-menu-item`, `ui-navigation-menu-trigger`, `ui-navigation-menu-trigger-proxy`, `ui-navigation-menu-viewport-proxy`, `ui-navigation-menu-item-indicator`, `ui-navigation-menu-link`, `ui-navigation-menu-content`, `ui-navigation-menu-viewport-positioner`, `ui-navigation-menu-viewport`, `ui-navigation-menu-indicator`, `ui-navigation-menu-arrow` |
 
 The examples below use the accordion. Everything they show about `delegate`, styling and the api applies to every component.
 
