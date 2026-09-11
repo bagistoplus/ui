@@ -65,6 +65,34 @@ describe("style props", () => {
     expect(el.style.getPropertyValue("--width")).toBe("80px");
   });
 
+  it("leaves a declaration it did not write", () => {
+    const el = mount();
+
+    // What floating-ui does to a positioner, and what a consumer does with an
+    // inline `style` on the element itself.
+    el.style.setProperty("--x", "40px");
+    el.setAttribute("style", `${el.getAttribute("style")}; left: 25%`);
+
+    applyProps(el, { style: { position: "absolute", transform: "translate3d(var(--x), 0, 0)" } }, scope);
+    applyProps(el, { style: { position: "absolute", transform: "translate3d(var(--x), 0, 0)" } }, scope);
+
+    expect(el.style.getPropertyValue("--x")).toBe("40px");
+    expect(el.style.left).toBe("25%");
+    expect(el.style.position).toBe("absolute");
+  });
+
+  it("removes only the declarations it owns when style goes away", () => {
+    const el = mount();
+
+    el.style.setProperty("--x", "40px");
+
+    applyProps(el, { style: { position: "absolute" } }, scope);
+    applyProps(el, {}, scope);
+
+    expect(el.style.position).toBe("");
+    expect(el.style.getPropertyValue("--x")).toBe("40px");
+  });
+
   it("leaves a string style alone", () => {
     const el = mount();
 

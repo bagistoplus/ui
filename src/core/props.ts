@@ -15,6 +15,7 @@ type Props = Record<string, unknown>;
 
 interface Applied {
   attributes: Set<string>;
+  styles: Set<string>;
   listeners: Map<string, EventListener>;
   props: Props;
 }
@@ -34,12 +35,14 @@ export function applyProps(el: Element, props: Props, scope: string): void {
   let record = scopes.get(scope);
 
   if (!record) {
-    record = { attributes: new Set(), listeners: new Map(), props };
+    record = { attributes: new Set(), styles: new Set(), listeners: new Map(), props };
     scopes.set(scope, record);
   }
 
   record.props = props;
 
+  const style = props.style;
+  const isStyleObject = style !== null && typeof style === "object";
   const next = new Set<string>();
 
   for (const key in props) {
@@ -49,6 +52,12 @@ export function applyProps(el: Element, props: Props, scope: string): void {
     }
 
     if (key === "children") {
+      continue;
+    }
+
+    // Handled below, one declaration at a time, so it never becomes an
+    // attribute and never joins the attribute removal set.
+    if (key === "style" && isStyleObject) {
       continue;
     }
 
@@ -63,6 +72,7 @@ export function applyProps(el: Element, props: Props, scope: string): void {
   }
 
   record.attributes = next;
+  record.styles = applyStyle(el as HTMLElement, style, record.styles);
 }
 
 export function releaseProps(el: Element, scope: string): void {
@@ -104,23 +114,59 @@ function bind(el: Element, record: Applied, key: string): void {
   el.addEventListener(type, listener);
 }
 
-/** Custom properties pass through untouched; everything else is camelCase. */
-function styleToCss(style: Record<string, unknown>): string {
-  const declarations: string[] = [];
-
-  for (const key in style) {
-    const value = style[key];
-
-    if (value == null || value === "") {
-      continue;
-    }
-
-    const name = key.startsWith("--") ? key : key.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
-
-    declarations.push(`${name}: ${String(value)}`);
+/**
+ * Declarations go on one at a time, never through the `style` attribute.
+ *
+ * A Zag style object is sometimes only a template. A positioner's `transform`
+ * reads `translate3d(var(--x), var(--y), 0)` and `@zag-js/popper` writes `--x`
+ * and `--y` itself with `setProperty`. Replacing the whole attribute would
+ * delete every declaration we do not own, so each one is compared, set and
+ * removed on its own. A consumer's own inline style survives for the same
+ * reason.
+ *
+ * Live DOM comparison is unchanged, only finer: a stripped `style` attribute
+ * leaves every `getPropertyValue` empty, so the next render writes them all
+ * back. The values we did not write stay gone, which is what `api.reposition()`
+ * is for.
+ */
+function applyStyle(el: HTMLElement, style: unknown, previous: Set<string>): Set<string> {
+  // A string already replaced the whole attribute, so nothing we set before it
+  // is left to remove.
+  if (typeof style === "string") {
+    return new Set();
   }
 
-  return declarations.join("; ");
+  const next = new Set<string>();
+
+  if (style !== null && typeof style === "object") {
+    for (const [key, value] of Object.entries(style)) {
+      if (value == null || value === "") {
+        continue;
+      }
+
+      const name = cssName(key);
+      const text = String(value);
+
+      next.add(name);
+
+      if (el.style.getPropertyValue(name) !== text) {
+        el.style.setProperty(name, text);
+      }
+    }
+  }
+
+  for (const name of previous) {
+    if (!next.has(name)) {
+      el.style.removeProperty(name);
+    }
+  }
+
+  return next;
+}
+
+/** Custom properties pass through untouched; everything else is camelCase. */
+function cssName(key: string): string {
+  return key.startsWith("--") ? key : key.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
 }
 
 function write(el: Element, key: string, value: unknown): void {
@@ -130,10 +176,6 @@ function write(el: Element, key: string, value: unknown): void {
     }
 
     return;
-  }
-
-  if (key === "style" && value !== null && typeof value === "object") {
-    value = styleToCss(value as Record<string, unknown>);
   }
 
   if (PROPERTIES.has(key)) {
