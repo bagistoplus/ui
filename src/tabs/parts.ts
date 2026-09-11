@@ -36,6 +36,10 @@ abstract class TabsPart extends ZagPart<tabs.Api, UITabs> {
  * also carry `data-ownedby` pointing at this element's id.
  */
 export class UITabsList extends TabsPart {
+  protected override get idKey(): string {
+    return "list";
+  }
+
   protected propsFor(api: tabs.Api): Props {
     return api.getListProps() as Props;
   }
@@ -75,6 +79,15 @@ export class UITabsTrigger extends TabsPart {
 
   set disabled(next: boolean) {
     this.toggleAttribute("disabled", Boolean(next));
+  }
+
+  /** Named by value: Zag's `ids.trigger` is a function of it. */
+  protected override get idKey(): string | undefined {
+    return this.value ? "trigger" : undefined;
+  }
+
+  protected override get idValue(): string | undefined {
+    return this.value ?? undefined;
   }
 
   protected propsFor(api: tabs.Api): Props | null {
@@ -120,6 +133,15 @@ export class UITabsContent extends TabsPart {
     this.setAttribute("value", next);
   }
 
+  /** Named by value, like the trigger. */
+  protected override get idKey(): string | undefined {
+    return this.value ? "content" : undefined;
+  }
+
+  protected override get idValue(): string | undefined {
+    return this.value ?? undefined;
+  }
+
   protected propsFor(api: tabs.Api): Props | null {
     const value = this.value;
 
@@ -134,6 +156,10 @@ export class UITabsContent extends TabsPart {
  * `--width` and `--height`, plus `position: absolute`.
  */
 export class UITabsIndicator extends TabsPart {
+  protected override get idKey(): string {
+    return "indicator";
+  }
+
   protected propsFor(api: tabs.Api): Props {
     return api.getIndicatorProps() as Props;
   }

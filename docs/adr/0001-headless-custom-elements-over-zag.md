@@ -101,6 +101,12 @@ The `positioning-*` list and its parser live once, in `src/core/positioning.ts`,
 
 `ids` is the one object prop that does **not** get attributes. The only case that matters is stopping Zag renaming an element a differ keys on, and `authoredId()` already covers it.
 
+### An authored id is honoured whether Zag names the part flatly or by value
+
+Zag's `ElementIds` has two shapes. A part there is one of is a string, `content?: string`. A part there is one of per item is a function of the value, `trigger?: (value: string) => string`. The first shape was covered from the start; the second was not, so an id written on a tabs trigger or an accordion panel was read and then overwritten, and a differ keyed on `id` replaced those elements on every re-render.
+
+The root now keeps both: flat ids in one map, value-keyed ids in a map per part, and it hands Zag one function per value-keyed key that reads its map **live**. Live, because `VanillaMachine` freezes `ids` into its scope when it is built and never rebuilds it, so a function closing over the map is what lets an item connected after the first frame still be named by the consumer. Zag falls back to its generated name when the function returns `undefined`, so a part without an authored id costs nothing. A value-keyed part reports its key only while it has a value, and reports the value beside the id, so the root can file it.
+
 Imperative access is `el.api`, the live Zag `connect()` result:
 
 ```js

@@ -311,6 +311,38 @@ describe("identity", () => {
 
     expect(root.id).toMatch(/^accordion:/);
   });
+
+  it("keeps an id the consumer authored on an item and its parts", async () => {
+    const host = await mount(`
+      <ui-accordion collapsible>
+        <ui-accordion-item value="a" id="item-a">
+          <ui-accordion-item-trigger delegate><button id="trigger-a">Trigger a</button></ui-accordion-item-trigger>
+          <ui-accordion-item-content id="content-a"><div>Panel body</div></ui-accordion-item-content>
+        </ui-accordion-item>
+        ${item("b")}
+      </ui-accordion>
+    `);
+
+    const itemA = host.querySelector<HTMLElement>("ui-accordion-item")!;
+    const [triggerA, triggerB] = triggers(host);
+    const [contentA, contentB] = host.querySelectorAll<HTMLElement>("ui-accordion-item-content");
+
+    expect(itemA.id).toBe("item-a");
+    expect(triggerA!.id).toBe("trigger-a");
+    expect(contentA!.id).toBe("content-a");
+    expect(triggerA!.getAttribute("aria-controls")).toBe("content-a");
+    expect(contentA!.getAttribute("aria-labelledby")).toBe("trigger-a");
+
+    // A sibling without one keeps Zag's name.
+    expect(triggerB!.id).toMatch(/^accordion:.*:trigger:b$/);
+    expect(contentB!.id).toMatch(/^accordion:.*:content:b$/);
+
+    await userEvent.click(triggerA!);
+    await frames();
+
+    expect(triggerA!.getAttribute("aria-expanded")).toBe("true");
+    expect(contentA!.id).toBe("content-a");
+  });
 });
 
 describe("api", () => {

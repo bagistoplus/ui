@@ -48,8 +48,8 @@ export abstract class ZagPart<TApi, TOwner extends PartOwner>
     this.#owner?.scheduleRender();
   }
 
-  registerId(part: string, id: string): void {
-    this.#owner?.registerId(part, id);
+  registerId(part: string, id: string, value?: string): void {
+    this.#owner?.registerId(part, id, value);
   }
 
   connectedCallback(): void {
@@ -152,11 +152,18 @@ export abstract class ZagPart<TApi, TOwner extends PartOwner>
   }
 
   /**
-   * The key in the machine's `ids` prop this part maps to, when its id is a plain
-   * name rather than one derived from a value. Parts that leave it undefined take
-   * whatever id Zag generates.
+   * The key in the machine's `ids` prop this part maps to. Parts that leave it
+   * undefined take whatever id Zag generates.
+   *
+   * A part Zag names by value returns its key only while it has a value, and
+   * returns that value from `idValue`, so the root can file the id under it.
    */
   protected get idKey(): string | undefined {
+    return undefined;
+  }
+
+  /** The value a value-keyed part's id is filed under. Undefined for a flat one. */
+  protected get idValue(): string | undefined {
     return undefined;
   }
 
@@ -206,7 +213,7 @@ export abstract class ZagPart<TApi, TOwner extends PartOwner>
     const id = this.authoredId();
 
     if (id) {
-      this.registerId(key, id);
+      this.registerId(key, id, this.idValue);
     }
   }
 

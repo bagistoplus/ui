@@ -66,6 +66,15 @@ export class UIAccordionItem extends ZagPart<accordion.Api, UIAccordion> {
     owner.unregisterChild(this);
   }
 
+  /** Named by value: Zag's `ids.item` is a function of it. */
+  protected override get idKey(): string | undefined {
+    return this.value ? "item" : undefined;
+  }
+
+  protected override get idValue(): string | undefined {
+    return this.value ?? undefined;
+  }
+
   protected propsFor(api: accordion.Api): Props | null {
     const value = this.value;
 

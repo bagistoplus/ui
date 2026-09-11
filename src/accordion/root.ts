@@ -25,6 +25,10 @@ export class UIAccordion extends ZagRootElement<accordion.Props, accordion.Api> 
     return "accordion";
   }
 
+  protected override get valueKeyedIds(): readonly string[] {
+    return ["item", "itemTrigger", "itemContent"];
+  }
+
   protected createMachine(props: () => accordion.Props): VanillaMachine<any> {
     return new VanillaMachine(accordion.machine, props);
   }
@@ -36,8 +40,8 @@ export class UIAccordion extends ZagRootElement<accordion.Props, accordion.Api> 
   protected machineProps(): accordion.Props {
     return {
       id: this.scopeKey,
-      // Keep the id the consumer wrote. Zag would otherwise rename the element.
-      ids: this.authoredId() ? { root: this.authoredId()! } : undefined,
+      // Keep the ids the consumer wrote. Zag would otherwise rename the elements.
+      ids: { root: this.authoredId(), ...this.authoredIds() } as accordion.Props["ids"],
       dir: readDirection(this),
       multiple: boolAttribute(this, "multiple"),
       collapsible: boolAttribute(this, "collapsible"),

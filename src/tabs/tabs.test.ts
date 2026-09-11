@@ -463,3 +463,37 @@ describe("property reflection", () => {
     expect(trigger.hasAttribute("disabled")).toBe(false);
   });
 });
+
+describe("identity", () => {
+  it("keeps an id the consumer authored on a trigger and a panel", async () => {
+    const host = await mount(`
+      <ui-tabs default-value="a">
+        <ui-tabs-list id="tablist">
+          <ui-tabs-trigger delegate value="a"><button id="tab-a">a</button></ui-tabs-trigger>
+          ${tab("b")}
+        </ui-tabs-list>
+        <ui-tabs-content value="a" id="panel-a"><div>Panel a</div></ui-tabs-content>
+        ${panel("b")}
+      </ui-tabs>
+    `);
+
+    const [a, b] = triggers(host);
+    const [panelA, panelB] = panels(host);
+
+    expect(host.querySelector("ui-tabs-list")!.id).toBe("tablist");
+    expect(a!.id).toBe("tab-a");
+    expect(panelA!.id).toBe("panel-a");
+    expect(a!.getAttribute("aria-controls")).toBe("panel-a");
+    expect(panelA!.getAttribute("aria-labelledby")).toBe("tab-a");
+
+    // A sibling without one keeps Zag's name.
+    expect(b!.id).toMatch(/^tabs:.*:trigger-b$/);
+    expect(panelB!.id).toMatch(/^tabs:.*:content-b$/);
+
+    await userEvent.click(b!);
+    await frames();
+
+    expect(a!.id).toBe("tab-a");
+    expect(panelA!.id).toBe("panel-a");
+  });
+});

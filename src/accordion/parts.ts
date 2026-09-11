@@ -27,6 +27,15 @@ abstract class ItemPart extends ZagPart<accordion.Api, UIAccordionItem> {
 export class UIAccordionItemTrigger extends ItemPart {
   #warned = false;
 
+  /** Named by the item's value: Zag's `ids.itemTrigger` is a function of it. */
+  protected override get idKey(): string | undefined {
+    return this.owner?.value ? "itemTrigger" : undefined;
+  }
+
+  protected override get idValue(): string | undefined {
+    return this.owner?.value ?? undefined;
+  }
+
   protected propsFor(api: accordion.Api, item: UIAccordionItem): Props | null {
     const value = item.value;
 
@@ -67,6 +76,15 @@ export class UIAccordionItemIndicator extends ItemPart {
 
 export class UIAccordionItemContent extends ItemPart {
   #presence: PresenceController | undefined;
+
+  /** Named by the item's value, like the trigger. */
+  protected override get idKey(): string | undefined {
+    return this.owner?.value ? "itemContent" : undefined;
+  }
+
+  protected override get idValue(): string | undefined {
+    return this.owner?.value ?? undefined;
+  }
 
   protected propsFor(api: accordion.Api, item: UIAccordionItem): Props | null {
     const value = item.value;

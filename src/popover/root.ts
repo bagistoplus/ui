@@ -58,7 +58,7 @@ export class UIPopover extends ZagRootElement<popover.Props, popover.Api> {
 
     return {
       id: this.scopeKey,
-      ids: this.authoredIds(),
+      ids: this.authoredIds() as popover.Props["ids"],
       dir: readDirection(this),
 
       // Zag portals nothing by itself. The prop only tells the machine whether

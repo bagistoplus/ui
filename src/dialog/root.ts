@@ -136,7 +136,7 @@ export class UIDialog extends ZagRootElement<dialog.Props, dialog.Api> {
 
     return {
       id: this.scopeKey,
-      ids: this.authoredIds(),
+      ids: this.authoredIds() as dialog.Props["ids"],
       dir: readDirection(this),
 
       defaultOpen: this.#pendingOpen ?? boolAttribute(this, "default-open"),

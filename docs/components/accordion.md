@@ -245,6 +245,21 @@ There is deliberately no `value` attribute for controlled state. Use `el.api.set
 | `value` | string | **required** | Unique within the accordion. Without it the item and all its parts render nothing |
 | `disabled` | boolean | absent | Disables this item only |
 
+### Naming the parts
+
+Write an `id` on an item, its trigger or its panel and the component keeps it, telling Zag to generate that name instead of its own. All three are named by the item's `value`, so each item carries its own ids:
+
+```html
+<ui-accordion-item value="shipping" id="faq-shipping">
+  <ui-accordion-item-trigger delegate><button id="faq-shipping-trigger">Shipping</button></ui-accordion-item-trigger>
+  <ui-accordion-item-content id="faq-shipping-panel">…</ui-accordion-item-content>
+</ui-accordion-item>
+```
+
+With `delegate`, the id goes on the child, because the child is the element Zag names.
+
+This matters for DOM differs, which key on `id`. morphdom treats a keyed live node against an **unkeyed** incoming one as incompatible and replaces the element outright rather than patching it. Server rendering the same id on both sides is what keeps the element alive across a re-render.
+
 ### `el.api`
 
 The live Zag accordion api. `undefined` until the element upgrades and connects.

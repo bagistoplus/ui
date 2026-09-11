@@ -12,8 +12,11 @@ export interface PartOwner {
   readonly scopeKey: string;
   readonly presenceEnabled: boolean;
   scheduleRender(): void;
-  registerId(part: string, id: string): void;
+  registerId(part: string, id: string, value?: string): void;
 }
+
+/** What `authoredIds()` hands Zag: a name, or a function of the value. */
+export type AuthoredIds = Record<string, string | ((value: string) => string | undefined)>;
 
 /** Anything the root renders in its pass. */
 export interface Renderable<TApi> {
@@ -34,6 +37,7 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
   readonly #children = new Set<Renderable<TApi>>();
   readonly #delegate = new Delegate(this, () => this.scheduleRender());
   readonly #partIds = new Map<string, string>();
+  readonly #valueIds = new Map<string, Map<string, string>>();
 
   #id: string | undefined;
 
@@ -94,7 +98,12 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
     this.scheduleRender();
   }
 
-  registerId(part: string, id: string): void {
+  registerId(part: string, id: string, value?: string): void {
+    if (value != null) {
+      this.#registerValueId(part, value, id);
+      return;
+    }
+
     if (this.#partIds.get(part) === id) {
       return;
     }
@@ -153,8 +162,49 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
 
   protected abstract machineProps(): TProps;
 
-  protected authoredIds(): Record<string, string> | undefined {
-    return this.#partIds.size > 0 ? Object.fromEntries(this.#partIds) : undefined;
+  /**
+   * The keys in Zag's `ids` that are functions of a value rather than names:
+   * `trigger` and `content` on tabs, `item`, `itemTrigger` and `itemContent`
+   * on an accordion. A subclass lists them; the default is none.
+   */
+  protected get valueKeyedIds(): readonly string[] {
+    return [];
+  }
+
+  /**
+   * Flat ids as they were registered. Every value-keyed key gets a function
+   * that reads its map LIVE, and that is the point: `VanillaMachine` freezes
+   * `ids` into its scope when it is built and never rebuilds it, so a function
+   * closing over the map is what lets an item connected after the first frame
+   * still be named by the consumer. Zag falls back to its own name when the
+   * function returns `undefined`, so an item without an authored id costs
+   * nothing.
+   */
+  protected authoredIds(): AuthoredIds | undefined {
+    const ids: AuthoredIds = Object.fromEntries(this.#partIds);
+
+    for (const key of this.valueKeyedIds) {
+      ids[key] = (value) => this.#valueIds.get(key)?.get(value);
+    }
+
+    return Object.keys(ids).length > 0 ? ids : undefined;
+  }
+
+  /** No `updateProps` here: the function handed to Zag reads the map as it is now. */
+  #registerValueId(part: string, value: string, id: string): void {
+    let ids = this.#valueIds.get(part);
+
+    if (!ids) {
+      ids = new Map();
+      this.#valueIds.set(part, ids);
+    }
+
+    if (ids.get(value) === id) {
+      return;
+    }
+
+    ids.set(value, id);
+    this.scheduleRender();
   }
 
   /**

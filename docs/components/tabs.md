@@ -159,6 +159,19 @@ Write `translations-list-label` on the root, **not `aria-label` on the list**. Z
 </ui-tabs>
 ```
 
+### Naming the parts
+
+Write an `id` on the list, the indicator, a trigger or a panel and the component keeps it, telling Zag to generate that name instead of its own. A trigger and a panel are named by their `value`, so each one carries its own id:
+
+```html
+<ui-tabs-trigger delegate value="details"><button id="tab-details">Details</button></ui-tabs-trigger>
+<ui-tabs-content value="details" id="panel-details">…</ui-tabs-content>
+```
+
+With `delegate`, the id goes on the child, because the child is the element Zag names.
+
+This matters for DOM differs, which key on `id`. morphdom treats a keyed live node against an **unkeyed** incoming one as incompatible and replaces the element outright rather than patching it. Server rendering the same id on both sides is what keeps the element alive across a re-render.
+
 ### `el.api`
 
 Available on `ui-tabs` only. Parts reach it with `el.closest("ui-tabs").api`.

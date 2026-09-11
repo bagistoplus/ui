@@ -26,6 +26,10 @@ export class UITabs extends ZagRootElement<tabs.Props, tabs.Api> {
     return "tabs";
   }
 
+  protected override get valueKeyedIds(): readonly string[] {
+    return ["trigger", "content"];
+  }
+
   protected createMachine(props: () => tabs.Props): VanillaMachine<any> {
     return new VanillaMachine(tabs.machine, props);
   }
@@ -39,8 +43,8 @@ export class UITabs extends ZagRootElement<tabs.Props, tabs.Api> {
 
     return {
       id: this.scopeKey,
-      // Keep the id the consumer wrote. Zag would otherwise rename the element.
-      ids: this.authoredId() ? { root: this.authoredId()! } : undefined,
+      // Keep the ids the consumer wrote. Zag would otherwise rename the elements.
+      ids: { root: this.authoredId(), ...this.authoredIds() } as tabs.Props["ids"],
       dir: readDirection(this),
       defaultValue: this.getAttribute("default-value"),
       orientation: this.getAttribute("orientation") === "vertical" ? "vertical" : "horizontal",
