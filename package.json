@@ -14,6 +14,10 @@
       "types": "./dist/accordion/index.d.ts",
       "default": "./dist/accordion/index.js"
     },
+    "./dialog": {
+      "types": "./dist/dialog/index.d.ts",
+      "default": "./dist/dialog/index.js"
+    },
     "./popover": {
       "types": "./dist/popover/index.d.ts",
       "default": "./dist/popover/index.js"
@@ -36,6 +40,7 @@
   },
   "dependencies": {
     "@zag-js/accordion": "^1.43.3",
+    "@zag-js/dialog": "^1.43.3",
     "@zag-js/popover": "^1.43.3",
     "@zag-js/presence": "^1.43.3",
     "@zag-js/tabs": "^1.43.3",

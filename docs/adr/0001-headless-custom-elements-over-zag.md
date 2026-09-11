@@ -138,7 +138,43 @@ Popover inverts the default: its content animates unless you write `presence="fa
 
 The difference is arity rather than taste. An accordion has one panel per item, so a single switch on the root beats N switches on N items, and defaulting it on would spin up a machine per item for consumers who animate nothing. A popover has exactly one content, so there is nothing to aggregate, the switch belongs on the element it governs, and the cost of leaving it on is one machine.
 
-Leaving it on is also close to free for anyone who animates nothing, because `@zag-js/presence` keys on `animation-name` and lets `hidden` land on the same frame when none is declared. The rule generalises: on by default where a component has one presence bearing part, opt in where it has one per item.
+Leaving it on is also close to free for anyone who animates nothing, because `@zag-js/presence` keys on `animation-name` and lets `hidden` land on the same frame when none is declared.
+
+The rule, stated once dialog existed to test it: **presence defaults on for a part there is exactly one of, and opt in for a part there is one of per item.** Dialog has two singleton presence bearing parts, the backdrop and the content, and both default on with their own `presence="false"`. A first reading of the popover rule, "one presence bearing part", would have made dialog a special case for no reason; the count that matters is per part, not per component.
+
+## A stacking context is escaped by the top layer, never a portal
+
+A `fixed` element inside an ancestor that has a `z-index` paints inside that ancestor's stacking context. A drawer in a `z-index: 40` header is capped at 40 against the page, and a portal to `<body>` is the usual escape.
+
+The package does not portal, and the reason is that three things Zag does depend on where the element sits in the tree. Sequential focus follows DOM order, which is why Zag's popover has a `portalled` prop whose sole job is a tab proxy repairing an order the DOM no longer provides. `hideContentBelow` walks up from the content marking siblings `aria-hidden`, and gets the wrong answer from the wrong tree. And a server side re-render patches a block's own subtree, which a portalled element has left; the consuming package renders one drawer two different ways today for exactly that reason.
+
+The top layer has none of those costs. An element with a `popover` attribute is promoted with `showPopover()`, paints above every stacking context, takes the viewport as its containing block, and does not move. Dialog's `top-layer` attribute does this to the backdrop and the positioner.
+
+Three choices inside that:
+
+- `popover="manual"`, not `auto`. An `auto` popover light-dismisses and closes other `auto` popovers, both of which would fight `@zag-js/dismissable`.
+- The positioner, not the content. A top layer element takes the viewport as its containing block, so promoting the content would pull it out of the positioner's layout. Promoting the positioner leaves the content laid out inside it exactly as before.
+- The root decides, not the parts. Zag gives the positioner no `hidden`, so on its own it cannot know when it is still needed through the content's exit animation. The root runs after every child has rendered and asks the presence bearing parts; one condition governs both promoted elements, and entry order puts the backdrop under the positioner whatever order the consumer wrote them in.
+
+The user agent styles every `[popover]` as a centred, bordered box on a `Canvas` background, which `ui.css` resets on the two dialog parts only. On a browser without `showPopover` the attribute is inert and the dialog stacks by `z-index`, which is the shape every consumer had before.
+
+The pre-upgrade guard for these two parts uses `!important`, the only one in the file that does. A dialog positioner nearly always carries an unlayered `flex` utility, which beats any normal declaration in the layer, and a full screen positioner painting before the bundle runs is a page nobody can click. Importance is scoped to `:not(:defined)` and is gone the moment the element upgrades.
+
+## `show()` and `hide()`
+
+`el.api` is the only imperative surface on accordion, tabs and popover, and it is undefined until the first frame after upgrade because the machine is built lazily inside the first render, which is what lets the parts report their authored ids first. Dialog is the first component whose consumers drive it from a reactive effect, and an effect's first run lands before that frame. `el.api?.setOpen(true)` silently does nothing there.
+
+So `ui-dialog` also has `show()` and `hide()`. After the first frame they call `api.setOpen`, which ignores a state it is already in. Before it, the intent is read as `defaultOpen` when the machine is built, so the dialog starts in the asked-for state. Nothing is queued and no lifecycle hook exists for it; the lazy creation that caused the problem is also what makes the fix one field.
+
+This is deliberately not a controlled `open` attribute. Zag's controlled mode buys exactly one thing, the ability to veto a close, and no consumer vetoes. Everything else it appears to buy, such as opening from an element outside the dialog, is `show()`.
+
+## An attribute that is also ARIA gets a prefixed name
+
+Two of Zag's dialog props are `role` and `aria-label`, both of which it writes on the content. Neither can be an attribute of the same name on `ui-dialog`: the host has no role, so `role="alertdialog"` on it is read as ARIA in its own right, and assistive technology then sees an alertdialog wrapping a second alertdialog.
+
+`role` becomes `content-role`, because it also changes machine defaults (an alertdialog ignores outside clicks and focuses its close trigger first) and so has to reach the machine.
+
+`aria-label` gets no attribute at all. Zag emits the key only when its own prop is set, the normalizer drops `undefined`, and `applyProps` removes only what it wrote, so an `aria-label` the consumer writes on `ui-dialog-content` survives every render. That differs from tabs, where Zag returns `aria-label` from `getListProps` unconditionally and `translations-list-label` had to exist. The rule is: the package writes only what Zag emits, so anything Zag leaves out stays authorable, and an attribute for it would be one more thing to keep in sync.
 
 ## What ships
 
@@ -185,6 +221,14 @@ Four things must hold before the remaining components move:
 ## Rendering is coalesced, and the only observer is per part
 
 Mounting registers every item and every part separately, so rendering on each registration would be O(items x parts). Renders are therefore coalesced onto one animation frame. Measured on a 50 item accordion with 150 parts, that turns roughly 200 registrations into 2 renders.
+
+### A machine tick renders synchronously
+
+Only registrations coalesce. A notification from the running machine renders inside the subscription, which is what `@zag-js/vanilla` itself does.
+
+Dialog is what made the difference visible. Zag's effects schedule their own frame from inside the transition, and the focus trap reads the DOM when that frame runs, looking for a tabbable node inside the content. That frame was requested before ours, so a render coalesced onto the next frame came one frame too late: the trap found the panel still `hidden`, activated on nothing, swallowed the error, and focus never moved. The same latent defect sat under popover's `auto-focus`, untested.
+
+Two things follow. A render can tick the machine, since a part reporting an authored id during its render calls `updateProps`, so the synchronous path is guarded and a nested notification is deferred to the frame instead. And presence had to change with it: `decorate` read the presence machine's own `present`, which takes a change one tick later, so the panel was still `hidden` on the render that opened it. Presence now defers hiding only, never showing. A part asked to show is unhidden on that same render.
 
 A delegate target is an ordinary element, so unlike a child custom element it cannot announce itself. Two cases need catching: a bundle that is not deferred connects a part before its child is parsed, and a morph can swap the child for a different element. Each part therefore observes **its own children only**, never a subtree.
 

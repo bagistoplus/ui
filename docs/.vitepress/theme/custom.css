@@ -317,3 +317,61 @@ th {
     transform: scale(0.96);
   }
 }
+
+/* Dialog drawer example: the backdrop dims in and out, the panel slides in
+   from the edge it sits against. */
+.ui-doc-slide[data-state="open"] {
+  animation: slide-in 200ms ease-out;
+}
+
+.ui-doc-slide[data-state="closed"] {
+  animation: slide-out 150ms ease-in;
+}
+
+@keyframes slide-in {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-out {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(100%);
+  }
+}
+
+.ui-doc-dim[data-state="open"] {
+  animation: dim-in 150ms ease-out;
+}
+
+.ui-doc-dim[data-state="closed"] {
+  animation: dim-out 100ms ease-in;
+}
+
+@keyframes dim-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes dim-out {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}

@@ -42,6 +42,7 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
   #api: TApi | undefined;
   #unsubscribe: (() => void) | undefined;
   #frame = 0;
+  #rendering = false;
 
   // `undefined` means not captured yet. Zag's root props carry an id, so this
   // has to be read before the first render writes Zag's own id over it.
@@ -182,6 +183,16 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
     return (api as { getRootProps?: () => Props }).getRootProps?.() ?? { "data-scope": this.componentName };
   }
 
+  /**
+   * Runs once every child has rendered, and before the machine starts.
+   *
+   * `rootProps` runs before the children, so anything the root must do with
+   * what a part computed during its own render has nowhere to go until here.
+   * Dialog uses it to move its backdrop and positioner in and out of the top
+   * layer, which depends on the content's presence state. Nothing else does.
+   */
+  protected afterRender(_api: TApi): void {}
+
   protected emit(name: string, detail: unknown): void {
     this.dispatchEvent(new CustomEvent(`ui-${this.componentName}:${name}`, { detail, bubbles: true }));
   }
@@ -210,7 +221,7 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
     this.#machine = machine;
     this.#unsubscribe = machine.subscribe(() => {
       this.#api = this.connect(machine);
-      this.scheduleRender();
+      this.#renderNow();
     });
 
     this.#api = this.connect(machine);
@@ -231,28 +242,61 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
     this.#started = false;
   }
 
-  #render(): void {
-    this.#create();
-
-    const api = this.#api;
-
-    if (!api) {
+  /**
+   * A machine tick renders synchronously; only registrations coalesce.
+   *
+   * Zag's effects schedule their own frame from inside the transition, and
+   * some of them read the DOM when it runs: the dialog's focus trap looks for
+   * a tabbable node inside the content. That frame was requested before ours,
+   * so a render coalesced onto the next frame would come one frame too late,
+   * the trap would find the panel still `hidden`, and focus would silently
+   * never move. Rendering inside the subscription is what `@zag-js/vanilla`
+   * itself does.
+   */
+  #renderNow(): void {
+    if (this.#rendering) {
+      this.scheduleRender();
       return;
     }
 
-    const props = this.rootProps(api);
-
-    if (props) {
-      this.#delegate.apply(props, this.scopeKey);
+    if (this.#frame) {
+      cancelAnimationFrame(this.#frame);
+      this.#frame = 0;
     }
 
-    for (const child of this.#children) {
-      child.render(api);
-    }
+    this.#render();
+  }
 
-    if (!this.#started && this.#machine) {
-      this.#started = true;
-      this.#machine.start();
+  #render(): void {
+    this.#rendering = true;
+
+    try {
+      this.#create();
+
+      const api = this.#api;
+
+      if (!api) {
+        return;
+      }
+
+      const props = this.rootProps(api);
+
+      if (props) {
+        this.#delegate.apply(props, this.scopeKey);
+      }
+
+      for (const child of this.#children) {
+        child.render(api);
+      }
+
+      this.afterRender(api);
+
+      if (!this.#started && this.#machine) {
+        this.#started = true;
+        this.#machine.start();
+      }
+    } finally {
+      this.#rendering = false;
     }
   }
 }

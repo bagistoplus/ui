@@ -114,6 +114,54 @@
     display: none;
   }
 
+  /* Dialog. The root takes no Zag part of its own, like the popover root, but
+     it is still a box: it is what the trigger, the backdrop and the positioner
+     sit in. */
+  ui-dialog,
+  ui-dialog-positioner,
+  ui-dialog-title,
+  ui-dialog-description {
+    display: block;
+  }
+
+  /* Same guard as every other panel, and for the same reason: Zag applies
+     `hidden` to both of these, and `[hidden] { display: none }` is a USER AGENT
+     rule that any author rule would beat, leaving a closed dialog visible and
+     still tabbable. */
+  ui-dialog-backdrop:not([hidden]):not([delegate]),
+  ui-dialog-content:not([hidden]):not([delegate]) {
+    display: block;
+  }
+
+  /* `top-layer` on the root promotes these two with `popover="manual"`, and the
+     user agent styles every `[popover]` as a centred, bordered, padded box on a
+     Canvas background, sized to its content. None of that belongs on a backdrop
+     or a positioner, whose consumer already writes `position`, `inset` and a
+     background. Only `position: fixed` from that sheet is left standing. */
+  ui-dialog-backdrop[popover],
+  ui-dialog-positioner[popover] {
+    inset: auto;
+    width: auto;
+    height: auto;
+    margin: 0;
+    border: 0;
+    padding: 0;
+    overflow: visible;
+    color: inherit;
+    background-color: transparent;
+  }
+
+  /* Before upgrade there is no `hidden` on the backdrop or the content yet, so a
+     dialog would paint open, full screen, and then vanish.
+
+     The `default-open` clause is not decoration. That dialog is meant to be
+     visible on first paint, so hiding it until the bundle runs is the one case
+     where the guard would be wrong rather than merely early. */
+  ui-dialog:not(:defined):not([default-open]) ui-dialog-backdrop,
+  ui-dialog:not(:defined):not([default-open]) ui-dialog-positioner {
+    display: none !important;
+  }
+
   /* `delegate` hands Zag's props to the single element child, so the host must
      cost no layout of its own. Last in the layer, and every rule above it that
      could match a delegating host carries `:not([delegate])`. */
@@ -137,7 +185,15 @@
   ui-popover-description[delegate],
   ui-popover-close-trigger[delegate],
   ui-popover-arrow[delegate],
-  ui-popover-arrow-tip[delegate] {
+  ui-popover-arrow-tip[delegate],
+  ui-dialog[delegate],
+  ui-dialog-trigger[delegate],
+  ui-dialog-backdrop[delegate],
+  ui-dialog-positioner[delegate],
+  ui-dialog-content[delegate],
+  ui-dialog-title[delegate],
+  ui-dialog-description[delegate],
+  ui-dialog-close-trigger[delegate] {
     display: contents;
   }
 }

@@ -18,6 +18,7 @@ export default {
     // the static build would throw `customElements is not defined`.
     if (!import.meta.env.SSR) {
       import("../../../src/accordion/index");
+      import("../../../src/dialog/index");
       import("../../../src/popover/index");
       import("../../../src/tabs/index");
     }
