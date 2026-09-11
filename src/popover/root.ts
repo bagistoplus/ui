@@ -1,40 +1,11 @@
 import * as popover from "@zag-js/popover";
 import { VanillaMachine } from "@zag-js/vanilla";
 
-import { boolAttribute, listAttribute, numberAttribute, readDirection } from "../core/dom";
+import { boolAttribute, readDirection } from "../core/dom";
 import { normalizeProps } from "../core/normalize";
+import { POSITIONING_ATTRIBUTES, readPositioning } from "../core/positioning";
 import { ZagRootElement } from "../core/root";
 import { POPOVER_ROOT } from "./brands";
-
-/**
- * Zag's `positioning` prop is an object, so it flattens one attribute per key.
- *
- * The list is the whole scalar surface minus floating-ui's plumbing. Left out:
- * `restoreStyles`, `applyStyles`, `sizeMiddleware` and `listeners`, none of which
- * is a design decision, and `applyStyles: false` in particular would stop `--x`
- * and `--y` ever being written, which is the one setting guaranteed to break
- * positioning outright. `offset` needs no attribute of its own: `gutter` is its
- * mainAxis fallback and `shift` its crossAxis one.
- *
- * `boundary` is left out for a different reason: it is not a choice we declined,
- * it is unreachable. The only string it accepts is `clipping-ancestors`, and
- * floating-ui already uses clipping ancestors when the option is omitted, so the
- * attribute could express nothing but the default.
- */
-const POSITIONING = [
-  "positioning-placement",
-  "positioning-strategy",
-  "positioning-gutter",
-  "positioning-shift",
-  "positioning-overflow-padding",
-  "positioning-arrow-padding",
-  "positioning-flip",
-  "positioning-slide",
-  "positioning-overlap",
-  "positioning-same-width",
-  "positioning-fit-viewport",
-  "positioning-hide-when-detached",
-];
 
 export class UIPopover extends ZagRootElement<popover.Props, popover.Api> {
   static readonly observedAttributes = [
@@ -47,7 +18,7 @@ export class UIPopover extends ZagRootElement<popover.Props, popover.Api> {
     "default-trigger-value",
     "translations-close-trigger-label",
     "dir",
-    ...POSITIONING,
+    ...POSITIONING_ATTRIBUTES,
   ];
 
   get [POPOVER_ROOT](): true {
@@ -110,49 +81,10 @@ export class UIPopover extends ZagRootElement<popover.Props, popover.Api> {
       closeOnEscape: boolAttribute(this, "close-on-escape"),
       defaultTriggerValue: this.getAttribute("default-trigger-value") ?? undefined,
       translations: closeTriggerLabel ? { closeTriggerLabel } : undefined,
-      positioning: this.#positioning(),
+      positioning: readPositioning(this),
 
       onOpenChange: (details) => this.emit("open-change", details),
       onTriggerValueChange: (details) => this.emit("trigger-value-change", details),
     };
-  }
-
-  #positioning(): popover.PositioningOptions {
-    const strategy = this.getAttribute("positioning-strategy");
-
-    return {
-      placement: (this.getAttribute("positioning-placement") as popover.Placement | null) ?? undefined,
-      strategy: strategy === "absolute" || strategy === "fixed" ? strategy : undefined,
-
-      gutter: numberAttribute(this, "positioning-gutter"),
-      shift: numberAttribute(this, "positioning-shift"),
-      overflowPadding: numberAttribute(this, "positioning-overflow-padding"),
-      arrowPadding: numberAttribute(this, "positioning-arrow-padding"),
-      flip: this.#flip(),
-      slide: boolAttribute(this, "positioning-slide"),
-      overlap: boolAttribute(this, "positioning-overlap"),
-      sameWidth: boolAttribute(this, "positioning-same-width"),
-      fitViewport: boolAttribute(this, "positioning-fit-viewport"),
-      hideWhenDetached: boolAttribute(this, "positioning-hide-when-detached"),
-    };
-  }
-
-  /** The one positioning option Zag takes as either a boolean or a list. */
-  #flip(): boolean | popover.Placement[] | undefined {
-    const value = this.getAttribute("positioning-flip");
-
-    if (value == null) {
-      return undefined;
-    }
-
-    if (value === "" || value === "true") {
-      return true;
-    }
-
-    if (value === "false") {
-      return false;
-    }
-
-    return listAttribute(value) as popover.Placement[] | undefined;
   }
 }

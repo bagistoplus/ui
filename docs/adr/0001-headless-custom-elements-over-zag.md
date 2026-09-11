@@ -97,6 +97,8 @@ A Zag prop whose type is an object becomes one attribute per key, named `<object
 
 This came up over `positioning`, which has 24 fields. The prefix is a rule rather than a curated list, which is what makes it possible to expose the whole scalar surface mechanically instead of guessing which four or eight options people need. A JSON attribute would have done the same job with no key-to-type map, and was rejected for being uninspectable in devtools and unreadable in a Blade template.
 
+The `positioning-*` list and its parser live once, in `src/core/positioning.ts`, and every root that positions with `@zag-js/popper` spreads the same twelve names into its observed attributes. Two copies would drift, and the drift would be invisible until one component accepted an attribute the other silently ignored.
+
 `ids` is the one object prop that does **not** get attributes. The only case that matters is stopping Zag renaming an element a differ keys on, and `authoredId()` already covers it.
 
 Imperative access is `el.api`, the live Zag `connect()` result:
