@@ -18,7 +18,7 @@ Five files, none of which know about a particular component.
 
 ### `root.ts`
 
-`ZagRootElement<TProps, TApi>`, the element that owns a machine. It handles the machine lifecycle, the child registry, coalesced rendering, the event namespace and the authored id capture.
+`ZagRootElement<TProps, TApi>`, the element that owns a machine. It handles the machine lifecycle, the child registry, coalesced rendering, the event namespace and the authored ids, its own and its parts'.
 
 ```ts
 protected abstract get componentName(): string;
@@ -29,9 +29,11 @@ protected abstract machineProps(): TProps;
 
 Three behaviours worth knowing:
 
-**The machine is built on connect and started after the first render.** `connect()` works on an unstarted service, since the ids come from the scope and the state is the initial one, which is all the first render needs. `machine.start()` then runs at the end of that render.
+**The machine is built at the start of the first render and started at the end of it.** `connect()` works on an unstarted service, since the ids come from the scope and the state is the initial one, which is all the first render needs. `machine.start()` then runs once children have rendered.
 
-The order matters because `start()` runs the machine's entry actions **synchronously**, and some of them query the DOM. Zag's tabs machine measures the selected trigger there and attaches the observers that keep the measurement fresh. A custom element connects before its children are parsed, so starting in `connectedCallback` ran all of that against an empty element, and the action bailed rather than retrying: the indicator stayed invisible until the first selection change, and never tracked a resize at all.
+Both ends of that are deferred for the same underlying reason: a custom element root connects **before any of its children are parsed**, so `connectedCallback` is too early to know anything about the subtree. Construction has to wait because `VanillaMachine` freezes `ids` into its scope in the constructor and `updateProps` never rebuilds it, so a part cannot report the id its consumer wrote after the fact. The consequence is worth knowing: an authored id is honoured for parts present in the initial markup, not for one appended later.
+
+Deferring `start()` matters because it runs the machine's entry actions **synchronously**, and some of them query the DOM. Zag's tabs machine measures the selected trigger there and attaches the observers that keep the measurement fresh. Starting in `connectedCallback` ran all of that against an empty element, and the action bailed rather than retrying: the indicator stayed invisible until the first selection change, and never tracked a resize at all.
 
 Every other Zag binding is already ordered this way. React calls `connect()` during render, commits the DOM, and starts the machine from an effect. This is the same sequence with an animation frame in place of the effect.
 
@@ -50,6 +52,12 @@ Every other Zag binding is already ordered this way. React calls `connect()` dur
 `propsFor()` returns `Props | null`, and `null` skips the **whole subtree**. It never means "no props", because every Zag part returns at least `data-scope` and `data-part`. It means the element is not in a renderable state, and nothing below it can be either.
 
 There are no subclasses in the core. Where the props land is not the part's decision, it is the consumer's, and `delegate.ts` answers it the same way for every element.
+
+**A part can keep the id its consumer wrote.** Zag names every element it binds, so an authored `id` is overwritten on the first render unless the machine is told to generate that name instead. A part with an `idKey` reports its authored id to the root, which passes the collection through as the machine's `ids`.
+
+That is not cosmetic. A DOM differ keys on `id`, and morphdom treats a keyed live node against an **unkeyed** incoming one as incompatible, so it replaces the element rather than patching it. The part loses its listeners, its machine-adjacent state and anything written to it imperatively, which for a popover positioner is floating-ui's measured coordinates. Matching keys on both sides is what keeps the element alive.
+
+With `delegate` the id belongs on the child, because the child is the element Zag names.
 
 ### `delegate.ts`
 

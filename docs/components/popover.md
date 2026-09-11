@@ -146,6 +146,8 @@ Every element takes Zag's props on itself unless you write `delegate`, which han
 | `dir` | `ltr` \| `rtl` | inherited | Taken from the nearest `[dir]` ancestor, including self |
 | `id` | string | none | Yours. Zag writes no id to this element |
 
+An `id` written on a **part** is kept too, rather than replaced by a generated one. See [Naming the parts](#naming-the-parts).
+
 ### Positioning
 
 Zag's `positioning` prop is an object, so it flattens one attribute per key. See [Usage](/guide/usage#nested-options-take-a-prefix).
@@ -201,6 +203,21 @@ Give each trigger a `value` and name the starting one with `default-trigger-valu
 Put a `ui-popover-title` and a `ui-popover-description` in the panel and Zag points `aria-labelledby` and `aria-describedby` at them.
 
 Both have to be in the **initial markup**. Zag checks for them one frame after the machine starts and does not look again, so a title added later is never referenced.
+
+### Naming the parts
+
+Write an `id` on any part except the trigger and the indicator and the component keeps it, telling Zag to generate that name instead of its own:
+
+```html
+<ui-popover-positioner id="filters-popper">
+  <ui-popover-content id="filters-panel">
+```
+
+With `delegate`, the id goes on the child, because the child is the element Zag names.
+
+This matters for DOM differs, which key on `id`. morphdom treats a keyed live node against an **unkeyed** incoming one as incompatible and replaces the element outright rather than patching it, taking its listeners and floating-ui's measured coordinates with it. Server rendering the same id on both sides is what keeps the element alive across a re-render.
+
+Ids are read once, when the machine is built at the end of the first frame. A part appended later takes a generated name.
 
 ### Surviving a DOM differ
 

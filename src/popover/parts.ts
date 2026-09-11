@@ -39,6 +39,10 @@ abstract class PopoverPart extends ZagPart<popover.Api, UIPopover> {
  * larger than the button that opens it, such as a whole table row.
  */
 export class UIPopoverAnchor extends PopoverPart {
+  protected override get idKey(): string {
+    return "anchor";
+  }
+
   protected propsFor(api: popover.Api): Props {
     return api.getAnchorProps() as Props;
   }
@@ -117,6 +121,10 @@ export class UIPopoverIndicator extends PopoverPart {
  * `style` wholesale loses the coordinates until `api.reposition()` runs.
  */
 export class UIPopoverPositioner extends PopoverPart {
+  protected override get idKey(): string {
+    return "positioner";
+  }
+
   protected propsFor(api: popover.Api): Props {
     return api.getPositionerProps() as Props;
   }
@@ -126,6 +134,10 @@ export class UIPopoverContent extends PopoverPart {
   static readonly observedAttributes = ["presence"];
 
   #presence: PresenceController | undefined;
+
+  protected override get idKey(): string {
+    return "content";
+  }
 
   /**
    * On by default, unlike the accordion's, where it is opt in on the root.
@@ -186,6 +198,10 @@ export class UIPopoverContent extends PopoverPart {
  * starts, so it has to be present in the initial markup rather than added later.
  */
 export class UIPopoverTitle extends PopoverPart {
+  protected override get idKey(): string {
+    return "title";
+  }
+
   protected propsFor(api: popover.Api): Props {
     return api.getTitleProps() as Props;
   }
@@ -193,6 +209,10 @@ export class UIPopoverTitle extends PopoverPart {
 
 /** Describing it. Same one-frame rule as the title. */
 export class UIPopoverDescription extends PopoverPart {
+  protected override get idKey(): string {
+    return "description";
+  }
+
   protected propsFor(api: popover.Api): Props {
     return api.getDescriptionProps() as Props;
   }
@@ -200,6 +220,10 @@ export class UIPopoverDescription extends PopoverPart {
 
 export class UIPopoverCloseTrigger extends PopoverPart {
   #warned = false;
+
+  protected override get idKey(): string {
+    return "closeTrigger";
+  }
 
   protected propsFor(api: popover.Api): Props {
     return api.getCloseTriggerProps() as Props;
@@ -228,6 +252,10 @@ export class UIPopoverCloseTrigger extends PopoverPart {
  * `--arrow-size` and `--arrow-background`.
  */
 export class UIPopoverArrow extends PopoverPart {
+  protected override get idKey(): string {
+    return "arrow";
+  }
+
   protected propsFor(api: popover.Api): Props {
     return api.getArrowProps() as Props;
   }

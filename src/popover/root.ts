@@ -67,11 +67,14 @@ export class UIPopover extends ZagRootElement<popover.Props, popover.Api> {
   }
 
   /**
-   * There is no `ids` here, unlike the accordion and tabs roots.
+   * `ids` comes from the parts, not from this element.
    *
-   * Popover's anatomy has no root part, so Zag writes no id to this element and
-   * an authored one survives untouched. Nothing has to be defended from being
-   * renamed out from under a DOM differ.
+   * Popover's anatomy has no root part, so Zag writes no id here and an authored
+   * one survives untouched. The parts are a different matter: Zag names every
+   * element it binds, and a DOM differ that keys on `id` then sees a keyed live
+   * node against an unkeyed incoming one and replaces it rather than patching it.
+   * So a part reports the id its consumer wrote and Zag generates that name
+   * instead. See `ZagRootElement.registerId`.
    *
    * Every value may be `undefined`, and that is deliberate rather than sloppy.
    * `VanillaMachine` runs Zag's `compact` over these props recursively before the
@@ -84,6 +87,7 @@ export class UIPopover extends ZagRootElement<popover.Props, popover.Api> {
 
     return {
       id: this.scopeKey,
+      ids: this.authoredIds(),
       dir: readDirection(this),
 
       // Zag portals nothing by itself. The prop only tells the machine whether

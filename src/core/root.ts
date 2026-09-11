@@ -12,6 +12,7 @@ export interface PartOwner {
   readonly scopeKey: string;
   readonly presenceEnabled: boolean;
   scheduleRender(): void;
+  registerId(part: string, id: string): void;
 }
 
 /** Anything the root renders in its pass. */
@@ -32,6 +33,7 @@ export interface Renderable<TApi> {
 export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implements PartOwner {
   readonly #children = new Set<Renderable<TApi>>();
   readonly #delegate = new Delegate(this, () => this.scheduleRender());
+  readonly #partIds = new Map<string, string>();
 
   #id: string | undefined;
 
@@ -66,7 +68,6 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
 
   connectedCallback(): void {
     this.#delegate.observe();
-    this.#create();
     this.scheduleRender();
   }
 
@@ -92,6 +93,18 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
     this.scheduleRender();
   }
 
+  registerId(part: string, id: string): void {
+    if (this.#partIds.get(part) === id) {
+      return;
+    }
+
+    this.#partIds.set(part, id);
+
+    // The machine may already be running: a part can connect at any time.
+    this.#machine?.updateProps(() => this.machineProps());
+    this.scheduleRender();
+  }
+
   registerChild(child: Renderable<TApi>): void {
     this.#children.add(child);
     this.scheduleRender();
@@ -108,7 +121,7 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
    * roughly 200 registrations into 2 renders.
    */
   scheduleRender(): void {
-    if (this.#frame || !this.#api) {
+    if (this.#frame) {
       return;
     }
 
@@ -126,6 +139,10 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
   protected abstract connect(machine: VanillaMachine<any>): TApi;
 
   protected abstract machineProps(): TProps;
+
+  protected authoredIds(): Record<string, string> | undefined {
+    return this.#partIds.size > 0 ? Object.fromEntries(this.#partIds) : undefined;
+  }
 
   /**
    * The id the consumer wrote, if any. Zag renames the element otherwise, and
@@ -174,6 +191,14 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
    *
    * `connect()` works on an unstarted service: the ids come from the scope and
    * the state is the initial one, which is exactly what the first render needs.
+   *
+   * Called from the first render rather than from `connectedCallback`, and that is
+   * not a detail. `VanillaMachine` freezes `ids` into its scope when it is
+   * constructed and `updateProps` never rebuilds it, while a custom element root
+   * connects before any of its children are parsed. Waiting one frame is what lets
+   * the parts report the ids their consumer wrote first. The consequence is that an
+   * authored id is honoured for parts in the initial markup, not for one appended
+   * later.
    */
   #create(): void {
     if (this.#machine) {
@@ -207,6 +232,8 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
   }
 
   #render(): void {
+    this.#create();
+
     const api = this.#api;
 
     if (!api) {

@@ -28,6 +28,8 @@ export abstract class ZagPart<TApi, TOwner extends PartOwner>
 
   #owner: TOwner | null = null;
 
+  #authoredId: string | null | undefined;
+
   // Allocated on first use. Most parts never own anything, and an accordion of
   // 50 items carries 150 of them.
   #parts: Set<ZagPart<TApi, any>> | undefined;
@@ -46,6 +48,10 @@ export abstract class ZagPart<TApi, TOwner extends PartOwner>
     this.#owner?.scheduleRender();
   }
 
+  registerId(part: string, id: string): void {
+    this.#owner?.registerId(part, id);
+  }
+
   connectedCallback(): void {
     const owner = findBranded<TOwner>(this, this.ownerBrand);
 
@@ -59,6 +65,7 @@ export abstract class ZagPart<TApi, TOwner extends PartOwner>
       this.register(owner);
     }
 
+    this.#contributeId();
     this.#delegate.observe();
   }
 
@@ -102,6 +109,10 @@ export abstract class ZagPart<TApi, TOwner extends PartOwner>
       return;
     }
 
+    // Retried here for a delegating part, whose child does not exist yet when it
+    // connects during parsing.
+    this.#contributeId();
+
     const props = this.propsFor(api, owner);
 
     // `null` is never "no props": every Zag part returns at least data-scope
@@ -140,6 +151,36 @@ export abstract class ZagPart<TApi, TOwner extends PartOwner>
     return this.#delegate;
   }
 
+  /**
+   * The key in the machine's `ids` prop this part maps to, when its id is a plain
+   * name rather than one derived from a value. Parts that leave it undefined take
+   * whatever id Zag generates.
+   */
+  protected get idKey(): string | undefined {
+    return undefined;
+  }
+
+  /**
+   * The id the consumer wrote, if any.
+   *
+   * Read from the delegate target, so it is the element Zag will actually name.
+   * Nothing is cached until that element exists: with `delegate` this runs before
+   * the child is parsed, and caching `null` there would lose the id for good.
+   */
+  protected authoredId(): string | undefined {
+    if (this.#authoredId === undefined) {
+      const target = this.#delegate.target();
+
+      if (!target) {
+        return undefined;
+      }
+
+      this.#authoredId = target.getAttribute("id");
+    }
+
+    return this.#authoredId ?? undefined;
+  }
+
   /** The brand of the element this part registers with. */
   protected abstract get ownerBrand(): symbol;
 
@@ -153,6 +194,20 @@ export abstract class ZagPart<TApi, TOwner extends PartOwner>
     this.scope = owner.scopeKey;
 
     return this.scope;
+  }
+
+  #contributeId(): void {
+    const key = this.idKey;
+
+    if (!key) {
+      return;
+    }
+
+    const id = this.authoredId();
+
+    if (id) {
+      this.registerId(key, id);
+    }
   }
 
   /** Called when the element is genuinely removed, not merely moved. */

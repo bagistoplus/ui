@@ -152,6 +152,64 @@ describe("the root has no anatomy part", () => {
   });
 });
 
+/**
+ * Zag names every element it binds, and a DOM differ keys on `id`. morphdom treats
+ * a keyed live node against an unkeyed incoming one as incompatible and replaces
+ * it outright, taking the machine state, the listeners and anything written
+ * imperatively with it. Keeping the authored name is what lets the keys match.
+ */
+describe("authored ids on the parts", () => {
+  const named = `
+    <ui-popover>
+      <ui-popover-trigger delegate><button>Open</button></ui-popover-trigger>
+      <ui-popover-positioner id="my-popper">
+        <ui-popover-content id="my-panel">
+          <ui-popover-title id="my-title">Title</ui-popover-title>
+          <ui-popover-description id="my-desc">Description</ui-popover-description>
+          <ui-popover-close-trigger delegate><button id="my-close">Close</button></ui-popover-close-trigger>
+        </ui-popover-content>
+      </ui-popover-positioner>
+    </ui-popover>
+  `;
+
+  it("keeps every authored name instead of generating one", async () => {
+    const host = await mount(named);
+
+    await open(host);
+
+    expect(positioner(host).id).toBe("my-popper");
+    expect(content(host).id).toBe("my-panel");
+    expect(host.querySelector("ui-popover-title")!.id).toBe("my-title");
+    expect(host.querySelector("ui-popover-description")!.id).toBe("my-desc");
+    // With `delegate` the id belongs on the child, because the child is the
+    // element Zag names.
+    expect(closeTrigger(host).id).toBe("my-close");
+    expect(host.querySelector("ui-popover-close-trigger")!.hasAttribute("id")).toBe(false);
+  });
+
+  it("still lets Zag find the parts it named", async () => {
+    const host = await mount(named);
+
+    await open(host);
+    await waitFor(() => positioner(host).style.getPropertyValue("--x") !== "");
+
+    // Positioning proves `getPositionerEl` resolved, and the label proves
+    // `checkRenderedElements` found the title by its authored id.
+    expect(content(host).getAttribute("aria-labelledby")).toBe("my-title");
+    expect(content(host).getAttribute("aria-describedby")).toBe("my-desc");
+
+    await userEvent.click(closeTrigger(host));
+    await waitFor(() => !isOpen(host));
+  });
+
+  it("generates a name for any part that authored none", async () => {
+    const host = await mount(basic());
+
+    expect(positioner(host).id).toContain(":popper");
+    expect(content(host).id).toContain(":content");
+  });
+});
+
 describe("delegation", () => {
   it("puts Zag's trigger props on the button, not on the part element", async () => {
     const host = await mount(basic());
