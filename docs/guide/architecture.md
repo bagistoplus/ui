@@ -79,11 +79,19 @@ That cache holds only while nothing else edits the DOM. A differ patching an ele
 
 So the comparison is against the **live DOM**. The module keeps its own record for only two things the DOM cannot answer: which attributes this scope owns, and event listeners. Listeners are registered once per event type as a stable dispatcher that reads the latest props, because Zag returns fresh closures from every `connect`.
 
-A `style` prop arrives as an **object** from anything Zag positions, and `String()` on that is `[object Object]`. It is serialised back to a CSS declaration string and written as an ordinary attribute, rather than assigned onto `el.style`. That is deliberate: going through the attribute path keeps all three invariants above, so the value is still compared against the live DOM, still tracked for removal, and still restored after a differ strips it. Custom properties pass through untouched, and everything else converts from camelCase.
+A `style` prop arrives as an **object** from anything Zag positions, and it is applied **one declaration at a time** with `setProperty`, never as a `style` attribute. Custom properties pass through untouched, and everything else converts from camelCase.
+
+Per declaration is not a detail. A Zag style object is sometimes only a template: a positioner's `transform` reads `translate3d(var(--x), var(--y), 0)`, and `@zag-js/popper` writes `--x` and `--y` itself with `setProperty` after floating-ui measures. Writing the whole `style` attribute would delete every declaration we do not own, which is those coordinates and also any inline `style` the consumer put on the element. The popover would then land in the corner of its containing block on the first re-render after opening.
+
+All three invariants above survive at declaration granularity. Comparison is against `getPropertyValue`, so a stripped `style` attribute leaves every read empty and the next render writes them all back. Removal is the same next-versus-previous set diff, over property names instead of attribute names.
+
+What does not come back is a value we never wrote. If a differ strips the attribute while a popover is open, floating-ui's coordinates are gone until something recomputes them, and `api.reposition()` is the documented repair. That is deliberately the consumer's call: a morph only happens in an editor, and the value is recoverable, unlike a lost `data-scope`.
 
 ### `dom.ts`
 
-`findBranded`, `listAttribute`, `readDirection`, `defineElement`.
+`findBranded`, `boolAttribute`, `listAttribute`, `readDirection`, `defineElement`.
+
+`boolAttribute` returns `boolean | undefined`, and the `undefined` is the interesting part: an absent attribute means the caller omits the prop entirely so the machine applies its own default. Presence gives `true`, and the literal `"false"` gives `false`. Presence alone cannot turn off a prop that defaults to `true`, and about half of Zag's booleans do.
 
 Nothing in the package references a tag name. A child finds its owner by walking `parentElement` and testing a `Symbol.for` brand, never `closest()` and never `instanceof`, which would break on a page that loaded the package twice.
 

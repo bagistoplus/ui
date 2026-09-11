@@ -1,7 +1,7 @@
 import * as tabs from "@zag-js/tabs";
 import { VanillaMachine, normalizeProps } from "@zag-js/vanilla";
 
-import { readDirection } from "../core/dom";
+import { boolAttribute, readDirection } from "../core/dom";
 import { ZagRootElement } from "../core/root";
 import { TABS_ROOT } from "./brands";
 
@@ -11,7 +11,9 @@ export class UITabs extends ZagRootElement<tabs.Props, tabs.Api> {
     "orientation",
     "activation-mode",
     "deselectable",
-    "list-label",
+    "translations-list-label",
+    "loop-focus",
+    "composite",
     "dir",
   ];
 
@@ -32,7 +34,7 @@ export class UITabs extends ZagRootElement<tabs.Props, tabs.Api> {
   }
 
   protected machineProps(): tabs.Props {
-    const listLabel = this.getAttribute("list-label");
+    const listLabel = this.getAttribute("translations-list-label");
 
     return {
       id: this.scopeKey,
@@ -42,7 +44,9 @@ export class UITabs extends ZagRootElement<tabs.Props, tabs.Api> {
       defaultValue: this.getAttribute("default-value"),
       orientation: this.getAttribute("orientation") === "vertical" ? "vertical" : "horizontal",
       activationMode: this.getAttribute("activation-mode") === "manual" ? "manual" : "automatic",
-      deselectable: this.hasAttribute("deselectable"),
+      deselectable: boolAttribute(this, "deselectable"),
+      loopFocus: boolAttribute(this, "loop-focus"),
+      composite: boolAttribute(this, "composite"),
 
       // The only way to name the tablist. Zag returns `aria-label` from
       // `getListProps` whether or not a translation exists, so an `aria-label`

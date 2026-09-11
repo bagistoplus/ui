@@ -74,7 +74,30 @@ Machine options arrive as individual observed attributes, not one JSON blob:
   <ui-accordion-item value="item-1">
 ```
 
-Each attribute is observed on its own, so a morph pushes only what changed. The markup is readable in devtools and self documenting, which a `config='{"multiple":true}'` blob is not. The cost is a small per component attribute schema with type coercion for boolean presence, numbers and comma lists.
+Each attribute is observed on its own, so a morph pushes only what changed. The markup is readable in devtools and self documenting, which a `config='{"multiple":true}'` blob is not. The cost is a small per component attribute schema with type coercion for booleans, numbers and comma lists.
+
+### A boolean attribute has three states
+
+Absent means "use the machine's default", present means `true`, and the literal value `"false"` means `false`.
+
+The first convention was presence alone, which works only while every prop defaults to `false`. Accordion and tabs happened to be like that, and the tabs port paid for it by dropping `loop-focus` and `composite` from its surface with a note saying a presence attribute could not express "true unless absent". About half of Zag's booleans default to `true`, so the next component was always going to force the question. Popover forced it: three BlocksPro views need `close-on-interact-outside="false"`.
+
+The rejected alternative was negated names, `no-close-on-interact-outside`, which has real HTML precedent in `novalidate` and `nomodule`. It was rejected because it would leave two boolean attributes in one package reading in opposite directions: `deselectable="false"` would mean `true` while `no-flip` would mean `false`. One rule that is slightly unusual beats two rules that contradict each other.
+
+This does deviate from HTML, where `disabled="false"` still means disabled. It deviates in the direction people expect rather than the direction that surprises them, and it is total: there is no boolean attribute here that reads any other way.
+
+### A nested prop flattens with an object prefix
+
+A Zag prop whose type is an object becomes one attribute per key, named `<object>-<key>`. Scalars stay flat.
+
+```html
+<ui-tabs translations-list-label="Product details">
+<ui-popover positioning-placement="bottom-end" positioning-gutter="8">
+```
+
+This came up over `positioning`, which has 24 fields. The prefix is a rule rather than a curated list, which is what makes it possible to expose the whole scalar surface mechanically instead of guessing which four or eight options people need. A JSON attribute would have done the same job with no key-to-type map, and was rejected for being uninspectable in devtools and unreadable in a Blade template.
+
+`ids` is the one object prop that does **not** get attributes. The only case that matters is stopping Zag renaming an element a differ keys on, and `authoredId()` already covers it.
 
 Imperative access is `el.api`, the live Zag `connect()` result:
 
@@ -166,6 +189,16 @@ An earlier version observed the whole accordion subtree from the root. Measureme
 Server rendered pages break that assumption. A DOM diffing library that patches an element in place removes every attribute the incoming HTML does not carry, and Zag's attributes are all in that category: a server sends no `id`, no `data-scope`, no `data-part`, no `dir`. The element keeps its identity and loses its props, and a cache backed applier never writes them back. The failure this surfaced in was silent: Zag's `getRootEl` stopped resolving and arrow key navigation died, one re-render after load.
 
 `applyProps` in `src/accordion/props.ts` therefore compares against the live DOM. Anything that strips an attribute gets it restored on the next render. It keeps its own record for two things the DOM cannot answer: which attributes this scope owns, so removing a prop removes the attribute, and event listeners. Listeners are registered once per event as a stable dispatcher that reads the latest props, rather than removed and re-added on every render as `spreadProps` does, because Zag returns fresh closures from every `connect`.
+
+### `style` is applied per declaration, not as an attribute
+
+The first version serialised a Zag style object to a CSS string and wrote it as an ordinary `style` attribute, on the grounds that the attribute path kept all three invariants above for free. That was wrong, and popover is what proved it.
+
+A Zag style object is sometimes only a template. `getPositionerProps().style` contains `transform: translate3d(var(--x), var(--y), 0)`, and the coordinates never appear in the object: `@zag-js/popper` writes `--x` and `--y` directly with `setProperty` once floating-ui has measured. Replacing the whole attribute deletes them, the `transform` becomes invalid at computed-value time and resolves to `none`, and the panel lands at its containing block's origin. It would have happened on the first re-render after every open, because floating-ui's `onComplete` sets `currentPlacement`, which wakes the subscription that schedules that render.
+
+So each declaration is compared, set and removed on its own. The invariants hold at declaration granularity rather than attribute granularity, and the component gains the property the attribute path structurally could not have: it no longer overwrites inline style it did not write. That is floating-ui's coordinates, and it is also a consumer's own `style` on the element, which the hotspot block relies on.
+
+What does not come back is a value we never wrote. A differ that strips the attribute while a popover is open takes floating-ui's coordinates with it, and `api.reposition()` is the repair. That stays the consumer's call rather than a self heal in the positioner: a morph only happens in an editor, so no storefront visitor reaches it, and the value is recoverable, unlike a lost `data-scope`.
 
 What a re-render legitimately costs is worth knowing, and belongs to the consumer rather than here. A differ that keys on `id` sees a keyed live node against an unkeyed incoming one and replaces it, so child elements do not survive. State does, because the machine is keyed by the item's `value`, which the server does send. Focus does not: the focused trigger becomes a new element and the browser drops focus.
 

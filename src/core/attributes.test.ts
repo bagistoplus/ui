@@ -41,7 +41,9 @@ const AUTHORED = [
   "default-value",
   "activation-mode",
   "deselectable",
-  "list-label",
+  "translations-list-label",
+  "loop-focus",
+  "composite",
 ];
 
 /** Reflected on purpose, and covered by their own tests. */

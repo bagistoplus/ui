@@ -1,6 +1,7 @@
 import type { VanillaMachine } from "@zag-js/vanilla";
 
 import { Delegate } from "./delegate";
+import { boolAttribute } from "./dom";
 
 type Props = Record<string, unknown>;
 
@@ -60,7 +61,7 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
   }
 
   get presenceEnabled(): boolean {
-    return this.hasAttribute("presence");
+    return boolAttribute(this, "presence") ?? false;
   }
 
   connectedCallback(): void {

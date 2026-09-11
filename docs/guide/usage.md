@@ -4,10 +4,31 @@ Attributes go in, `el.api` and events come out.
 
 ## Attributes in
 
-Every machine option is an individual observed attribute. Boolean options are presence attributes:
+Every machine option is an individual observed attribute:
 
 ```html
 <ui-accordion multiple collapsible orientation="vertical" default-value="a,b">
+```
+
+### Booleans read three ways
+
+Absent means "use the machine's default", present means `true`, and the literal value `"false"` means `false`.
+
+```html
+<ui-accordion multiple>              <!-- true -->
+<ui-accordion multiple="false">      <!-- false -->
+<ui-accordion>                       <!-- whatever Zag defaults to -->
+```
+
+The third form is what presence alone cannot express, and about half of Zag's booleans default to `true`, so it is not an edge case. Note that this deviates from HTML, where `disabled="false"` still means disabled. The deviation is uniform: every boolean attribute in this package reads the same way, so no two of them read the same markup in opposite directions.
+
+### Nested options take a prefix
+
+A Zag prop whose type is an object flattens into one attribute per key, named `<object>-<key>`:
+
+```html
+<ui-tabs translations-list-label="Product details">
+<ui-popover positioning-placement="bottom-end" positioning-gutter="8">
 ```
 
 Changing one updates the machine in place. The current open state survives, which is the point: a server can re-render the markup and the component does not reset.

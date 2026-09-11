@@ -121,7 +121,9 @@ Every element takes Zag's props on itself unless you write `delegate`, which han
 | `orientation` | `horizontal` \| `vertical` | `horizontal` | Arrow key axis. Anything but the exact string `vertical` reads as `horizontal` |
 | `activation-mode` | `automatic` \| `manual` | `automatic` | Whether arrow keys select, or only move focus |
 | `deselectable` | boolean | absent | Clicking the selected tab clears the selection |
-| `list-label` | string | none | Accessible name for the tablist. See below |
+| `loop-focus` | boolean | `true` | Arrow keys wrap from the last tab to the first |
+| `composite` | boolean | `true` | The tabs take part in sequential focus navigation |
+| `translations-list-label` | string | none | Accessible name for the tablist. See below |
 | `delegate` | boolean | absent | Applies Zag's props to the single element child instead of to this element. Available on every element in the anatomy |
 | `dir` | `ltr` \| `rtl` | inherited | Taken from the nearest `[dir]` ancestor, including self |
 | `id` | string | generated | Kept, and used as Zag's root id |
@@ -130,7 +132,9 @@ Every attribute is observed. Changing one updates the machine in place, so the s
 
 There is deliberately no `value` attribute for controlled state. Use `el.api.setValue()`.
 
-`loop-focus` and `composite` are not exposed. Both default to `true` in Zag, and a presence attribute cannot express "true unless absent" without a second boolean convention. Ask if you need them.
+Every boolean attribute reads three ways. Absent means "use Zag's default", present means `true`, and the literal value `"false"` means `false`. That last form is how you turn off a prop whose default is `true`, such as `loop-focus="false"`.
+
+`translations-list-label` carries the `translations-` prefix because Zag's prop is an object. Any Zag prop that is a nested object flattens the same way, one attribute per key.
 
 ### Attributes on the parts
 
@@ -144,7 +148,7 @@ A trigger or panel with no `value` renders nothing at all, rather than rendering
 
 ### Naming the tablist
 
-Write `list-label` on the root, **not `aria-label` on the list**. Zag returns `aria-label` from its list props whether or not a label exists, so an `aria-label` you write is removed on the first render.
+Write `translations-list-label` on the root, **not `aria-label` on the list**. Zag returns `aria-label` from its list props whether or not a label exists, so an `aria-label` you write is removed on the first render.
 
 `aria-labelledby` is untouched and is the better answer when a heading already names the tabs.
 

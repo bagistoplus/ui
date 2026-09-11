@@ -234,6 +234,8 @@ Every element takes Zag's props on itself unless you write `delegate`, which han
 
 Every attribute is observed. Changing one updates the machine in place, so the open state survives.
 
+Every boolean attribute reads three ways. Absent means "use Zag's default", present means `true`, and the literal value `"false"` means `false`. See [Usage](/guide/usage#booleans-read-three-ways).
+
 There is deliberately no `value` attribute for controlled state. Use `el.api.setValue()`.
 
 ### Attributes on `ui-accordion-item`

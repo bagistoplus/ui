@@ -16,6 +16,28 @@ export function findBranded<T>(start: Element, brand: symbol): T | null {
   return null;
 }
 
+/**
+ * A boolean attribute with three states, not two.
+ *
+ * Absent returns `undefined`, so the caller passes nothing and the machine
+ * applies its own default. Present returns `true`, and the literal value
+ * `"false"` returns `false`. That last case is the point: half of Zag's booleans
+ * default to `true`, and presence alone can only ever turn something on.
+ *
+ * It does deviate from HTML, where `disabled="false"` still means disabled. The
+ * deviation is deliberate and total: one rule for every boolean attribute here,
+ * so no two of them read the same markup in opposite directions.
+ */
+export function boolAttribute(el: Element, name: string): boolean | undefined {
+  const value = el.getAttribute(name);
+
+  if (value === null) {
+    return undefined;
+  }
+
+  return value !== "false";
+}
+
 export function listAttribute(value: string | null): string[] | undefined {
   if (value == null) {
     return undefined;

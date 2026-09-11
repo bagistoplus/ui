@@ -278,7 +278,7 @@ describe("delegate", () => {
 describe("list label", () => {
   it("names the tablist, which a plain aria-label cannot do", async () => {
     const host = await mount(`
-      <ui-tabs default-value="a" list-label="Product details">
+      <ui-tabs default-value="a" translations-list-label="Product details">
         <ui-tabs-list aria-label="stripped by zag">${tab("a")}</ui-tabs-list>
         ${panel("a")}
       </ui-tabs>
