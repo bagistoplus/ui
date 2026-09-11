@@ -202,6 +202,36 @@ describe("authored ids on the parts", () => {
     await waitFor(() => !isOpen(host));
   });
 
+  it("keeps an authored name on a single trigger", async () => {
+    const host = await mount(`
+      <ui-popover>
+        <ui-popover-trigger delegate><button id="my-trigger">Open</button></ui-popover-trigger>
+        <ui-popover-positioner><ui-popover-content>Body</ui-popover-content></ui-popover-positioner>
+      </ui-popover>
+    `);
+
+    await open(host);
+
+    expect(trigger(host).id).toBe("my-trigger");
+
+    // Zag still resolves the pair, so the authored name reached the machine
+    // rather than merely surviving on the element.
+    expect(trigger(host).getAttribute("aria-controls")).toBe(content(host).id);
+  });
+
+  it("ignores an authored name on a trigger that has a value", async () => {
+    const host = await mount(`
+      <ui-popover>
+        <ui-popover-trigger delegate value="a"><button id="ignored">A</button></ui-popover-trigger>
+        <ui-popover-positioner><ui-popover-content>Body</ui-popover-content></ui-popover-positioner>
+      </ui-popover>
+    `);
+
+    // Zag builds a valued trigger's id from the value, so a flat name would
+    // collide the moment a second trigger appeared.
+    expect(trigger(host).id).toContain(":trigger:a");
+  });
+
   it("generates a name for any part that authored none", async () => {
     const host = await mount(basic());
 

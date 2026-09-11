@@ -54,6 +54,14 @@ export class UIPopoverTrigger extends PopoverPart {
   #warned = false;
 
   /**
+   * Only while this trigger has no `value`. Zag derives a valued trigger's id
+   * from that value, so several of them cannot share one flat name.
+   */
+  protected override get idKey(): string | undefined {
+    return this.value == null ? "trigger" : undefined;
+  }
+
+  /**
    * Reflected, because a property assignment must reach the attribute.
    *
    * Any framework that renders these elements decides between `setAttribute` and
