@@ -221,14 +221,10 @@ Ids are read once, when the machine is built at the end of the first frame. A pa
 
 ### Surviving a DOM differ
 
-A differ that patches an element in place removes every attribute the incoming HTML did not carry. Most of what this component writes comes straight back, because props are compared against the live DOM rather than a cache.
 
-The exception is the positioner's coordinates. `--x`, `--y`, `--z-index` and `--transform-origin` are written by floating-ui, not by this component, so nothing here restores them and the panel jumps to its containing block's origin.
-
-The repair is one call, and it belongs wherever you handle the re-render:
 
 ```js
-document.querySelector("ui-popover").api.reposition();
+document.querySelector("ui-popover").flush();
 ```
 
 ### `el.api`

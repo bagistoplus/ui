@@ -30,6 +30,7 @@ export class PresenceController {
   #api: presence.Api | undefined;
   #unsubscribe: (() => void) | undefined;
   #node: HTMLElement | undefined;
+  #present: boolean | undefined;
 
   constructor(private readonly onChange: () => void) {}
 
@@ -46,7 +47,16 @@ export class PresenceController {
    */
   decorate(node: HTMLElement, props: Props, present: boolean): Props {
     this.#ensure(node, present);
-    this.#machine?.updateProps(() => ({ present }));
+
+    // Only on a change. `updateProps` notifies every subscriber, and the
+    // subscriber below schedules a render, which lands back here: pushed on
+    // every render, that is a render on every frame for as long as the
+    // element lives.
+    if (this.#present !== present) {
+      this.#present = present;
+      this.#machine?.updateProps(() => ({ present }));
+    }
+
     this.#refresh();
 
     // Showing is never deferred, only hiding. The machine takes a change of
@@ -65,6 +75,7 @@ export class PresenceController {
     this.#machine = undefined;
     this.#api = undefined;
     this.#node = undefined;
+    this.#present = undefined;
   }
 
   #ensure(node: HTMLElement, present: boolean): void {
@@ -72,6 +83,7 @@ export class PresenceController {
       const machine = createPresenceMachine(() => present);
 
       this.#machine = machine;
+      this.#present = present;
       this.#unsubscribe = machine.subscribe(() => {
         this.#refresh();
         this.onChange();

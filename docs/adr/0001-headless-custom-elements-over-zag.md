@@ -238,6 +238,12 @@ Dialog is what made the difference visible. Zag's effects schedule their own fra
 
 Two things follow. A render can tick the machine, since a part reporting an authored id during its render calls `updateProps`, so the synchronous path is guarded and a nested notification is deferred to the frame instead. And presence had to change with it: `decorate` read the presence machine's own `present`, which takes a change one tick later, so the panel was still `hidden` on the render that opened it. Presence now defers hiding only, never showing. A part asked to show is unhidden on that same render.
 
+### Between ticks, nothing renders
+
+That is the invariant, and it was broken for as long as presence existed without anyone noticing. `decorate` pushed `present` into the presence machine with `updateProps` on every render, `updateProps` notifies every subscriber, and the subscriber schedules a render. One render per frame, for every component with presence on, for as long as the page lived. It surfaced as a style toggled in devtools being put back a frame later.
+
+Presence now pushes only a change of `present`. The cost of the loop had hidden a second fact: the popover test that stripped the positioner's `style` and called `reposition()` passed only because the next frame re-applied every prop. With the loop gone, what a differ strips stays stripped until a tick or a `flush()`, which is the model the dialog already documented. An idle component schedules no frame, and the popover suite asserts it.
+
 A delegate target is an ordinary element, so unlike a child custom element it cannot announce itself. Two cases need catching: a bundle that is not deferred connects a part before its child is parsed, and a morph can swap the child for a different element. Each part therefore observes **its own children only**, never a subtree.
 
 An earlier version observed the whole accordion subtree from the root. Measurement showed that was the wrong shape. It fired zero times during mount, because the package ships as `type="module"` and upgrades run after parsing, when children already exist. It did fire on content a merchant put inside a panel, forcing a full re-spread of all 150 parts for a change the library does not care about. Scoped per part, unrelated content churn now costs nothing.

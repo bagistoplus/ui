@@ -1,8 +1,9 @@
 import { userEvent } from "vitest/browser";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import "../../ui.css";
 import "./index";
+import { PresenceController } from "../core/presence";
 import type { UIPopoverContent } from "./parts";
 import type { UIPopover } from "./root";
 
@@ -643,7 +644,7 @@ describe("el.api", () => {
     await waitFor(() => !isOpen(host));
   });
 
-  it("repositions on demand, which is the repair after a differ strips the style", async () => {
+  it("flushes and repositions on demand, which is the repair after a differ strips the style", async () => {
     const host = await mount(basic(`positioning-placement="bottom" positioning-gutter="8"`));
 
     await open(host);
@@ -651,10 +652,34 @@ describe("el.api", () => {
 
     // What a morph does: the server never sent this attribute, so it goes.
     positioner(host).removeAttribute("style");
+    await frames();
+
+    // Nothing renders between machine ticks, so the stripped declarations
+    // stay stripped until asked for. `flush()` puts back what the component
+    // writes, `reposition()` what floating-ui writes.
+    expect(positioner(host).style.position).toBe("");
+
+    root(host).flush();
+    expect(positioner(host).style.position).toBe("absolute");
 
     root(host).api!.reposition();
     await waitFor(() => positioner(host).style.getPropertyValue("--x") !== "");
+  });
+});
 
-    expect(positioner(host).style.position).toBe("absolute");
+describe("idle", () => {
+  it("does not render on every frame", async () => {
+    const host = await mount(basic());
+    const decorate = vi.spyOn(PresenceController.prototype, "decorate");
+
+    await frames(10);
+
+    // `updateProps` inside presence notified a subscriber that scheduled the
+    // next render, which called `updateProps` again: one render per frame for
+    // ever, and any style edited in devtools was put back a frame later.
+    expect(decorate).toHaveBeenCalledTimes(0);
+    expect(isOpen(host)).toBe(false);
+
+    decorate.mockRestore();
   });
 });
