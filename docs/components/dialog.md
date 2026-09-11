@@ -181,7 +181,7 @@ Three things to know:
 
 - **The user agent styles every `[popover]`** as a centred, bordered, padded box on a `Canvas` background. `ui.css` resets that on these two elements, and keeps only `position: fixed`. Your own `inset`, background and layout classes apply as usual.
 - **It is inert where `showPopover` does not exist.** The attribute is not written and the dialog stacks by `z-index`, exactly as it does without `top-layer`.
-- **Re-adding `popover` does not re-promote.** If something strips the attribute from a promoted element, the browser drops it out of the top layer. The next render writes the attribute back and promotes it again, so after a DOM differ has run, call `scheduleRender()` on `ui-dialog`.
+- **Re-adding `popover` does not re-promote.** If something strips the attribute from a promoted element, the browser drops it out of the top layer. A render writes the attribute back and promotes it again, so after a DOM differ has run, call [`flush()`](#flush) on `ui-dialog`.
 
 ### Several triggers, one dialog
 
@@ -226,6 +226,16 @@ With `delegate`, the id goes on the child, because the child is the element Zag 
 This matters for DOM differs, which key on `id`. morphdom treats a keyed live node against an **unkeyed** incoming one as incompatible and replaces the element outright, taking its listeners and its presence state with it. Server rendering the same id on both sides is what keeps the element alive across a re-render.
 
 Ids are read once, when the machine is built at the end of the first frame. A part appended later takes a generated name.
+
+### `flush()`
+
+Re-applies the current api to every part synchronously. Every root has it.
+
+It exists for whoever runs a DOM differ over the element. A differ strips every attribute the server did not send, and the next render puts them back, but a frame later: the browser paints once in between, sees `data-state` gone and then returned, and restarts the animation keyed on it, and a promoted element that lost `popover` spends that frame out of the top layer. Called from the same task as the differ, nothing is ever painted without them.
+
+```js
+document.querySelector("ui-dialog").flush();
+```
 
 ### `el.api`
 

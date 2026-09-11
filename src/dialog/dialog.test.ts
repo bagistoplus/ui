@@ -646,12 +646,14 @@ describe("top-layer", () => {
   });
 
   /**
-   * What a DOM differ does: the server never sent `popover`, so it goes, and
-   * the browser drops the element out of the top layer with it. Writing the
-   * attribute back is not enough on its own; the next render is what
-   * re-promotes it.
+   * What a DOM differ does: the server never sent `popover` or `data-state`,
+   * so they go, and the browser drops the element out of the top layer with
+   * the first. Writing the attribute back is not enough on its own, and a
+   * render on the next frame lets the browser paint once without `data-state`,
+   * which restarts the animation keyed on it. `flush()` is synchronous so that
+   * nothing is painted in between.
    */
-  it("is re-entered by a render after a differ strips the attribute", async () => {
+  it("is put back, in the same task, by flush() after a differ strips the attributes", async () => {
     overlay();
 
     const host = await mount(basic("top-layer"));
@@ -660,10 +662,13 @@ describe("top-layer", () => {
     await waitFor(() => inTopLayer(positioner(host)));
 
     positioner(host).removeAttribute("popover");
+    content(host).removeAttribute("data-state");
     expect(inTopLayer(positioner(host))).toBe(false);
 
-    root(host).scheduleRender();
-    await waitFor(() => inTopLayer(positioner(host)));
+    root(host).flush();
+
+    expect(inTopLayer(positioner(host))).toBe(true);
+    expect(content(host).getAttribute("data-state")).toBe("open");
   });
 
   it("drops out when the attribute is removed while open", async () => {

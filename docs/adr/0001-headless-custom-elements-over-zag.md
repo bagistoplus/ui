@@ -256,6 +256,8 @@ That ordering is worth recording as a lesson rather than a footnote. The per-dec
 
 So each declaration is compared, set and removed on its own. The invariants hold at declaration granularity rather than attribute granularity, and the component gains the property the attribute path structurally could not have: it no longer overwrites inline style it did not write. That is floating-ui's coordinates, and it is also a consumer's own `style` on the element, which the hotspot block relies on.
 
+When it comes back matters as much as whether. The next render is a frame away, and the browser paints once in between with `data-state` missing, which restarts the animation keyed on it and, for a promoted dialog part, leaves the top layer for that frame. `flush()` on every root re-applies the api synchronously, so a consumer that runs a differ calls it from the same task and nothing is painted without the attributes.
+
 What does not come back is a value we never wrote. A differ that strips the attribute while a popover is open takes floating-ui's coordinates with it, and `api.reposition()` is the repair. That stays the consumer's call rather than a self heal in the positioner: a morph only happens in an editor, so no storefront visitor reaches it, and the value is recoverable, unlike a lost `data-scope`.
 
 What a re-render legitimately costs is worth knowing, and belongs to the consumer rather than here. A differ that keys on `id` sees a keyed live node against an unkeyed incoming one and replaces it, so child elements do not survive. State does, because the machine is keyed by the item's `value`, which the server does send. Focus does not: the focused trigger becomes a new element and the browser drops focus.

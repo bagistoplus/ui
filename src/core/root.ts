@@ -116,6 +116,18 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
   }
 
   /**
+   * Re-applies the current api to every element, now, in the caller's task.
+   */
+  flush(): void {
+    if (!this.#api) {
+      this.scheduleRender();
+      return;
+    }
+
+    this.#renderNow();
+  }
+
+  /**
    * Renders are coalesced to one frame. Mounting registers every child and
    * every part separately, so rendering on each would be O(children x parts).
    * Measured on an accordion of 50 items and 150 parts, coalescing turns
