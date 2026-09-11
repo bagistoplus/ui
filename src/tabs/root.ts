@@ -1,7 +1,8 @@
 import * as tabs from "@zag-js/tabs";
-import { VanillaMachine, normalizeProps } from "@zag-js/vanilla";
+import { VanillaMachine } from "@zag-js/vanilla";
 
 import { boolAttribute, readDirection } from "../core/dom";
+import { normalizeProps } from "../core/normalize";
 import { ZagRootElement } from "../core/root";
 import { TABS_ROOT } from "./brands";
 

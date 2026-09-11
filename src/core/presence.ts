@@ -1,5 +1,7 @@
 import * as presence from "@zag-js/presence";
-import { VanillaMachine, normalizeProps } from "@zag-js/vanilla";
+import { VanillaMachine } from "@zag-js/vanilla";
+
+import { normalizeProps } from "./normalize";
 
 type Props = Record<string, unknown>;
 

@@ -19,6 +19,7 @@ Each component is its own entry point, so you ship only what you use.
 | --- | --- | --- |
 | Accordion | `@bagistoplus/ui/accordion` | `ui-accordion`, `ui-accordion-item`, `ui-accordion-item-trigger`, `ui-accordion-item-content`, `ui-accordion-item-indicator` |
 | Tabs | `@bagistoplus/ui/tabs` | `ui-tabs`, `ui-tabs-list`, `ui-tabs-trigger`, `ui-tabs-content`, `ui-tabs-indicator` |
+| Popover | `@bagistoplus/ui/popover` | `ui-popover`, `ui-popover-anchor`, `ui-popover-trigger`, `ui-popover-indicator`, `ui-popover-positioner`, `ui-popover-content`, `ui-popover-title`, `ui-popover-description`, `ui-popover-close-trigger`, `ui-popover-arrow`, `ui-popover-arrow-tip` |
 
 The examples below use the accordion. Everything they show about `delegate`, styling and the api applies to both.
 

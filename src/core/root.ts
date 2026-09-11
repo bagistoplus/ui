@@ -151,9 +151,18 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
     return this.#authoredId ?? undefined;
   }
 
-  /** Not every machine has a root part. Override to return null when it does not. */
+  /**
+   * Not every machine has a root part. Popover's anatomy has no `root` at all,
+   * and menu's is the same, so the fallback is everything those roots can
+   * honestly claim: the scope, and nothing else.
+   *
+   * `data-scope` on its own is a shape Zag never emits, since it always pairs it
+   * with a `data-part`. That is harmless, because every Zag DOM query matches on
+   * both together, and it keeps a root recognisable in devtools whether or not
+   * its machine has a root part.
+   */
   protected rootProps(api: TApi): Props | null {
-    return (api as { getRootProps?: () => Props }).getRootProps?.() ?? null;
+    return (api as { getRootProps?: () => Props }).getRootProps?.() ?? { "data-scope": this.componentName };
   }
 
   protected emit(name: string, detail: unknown): void {

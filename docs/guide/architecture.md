@@ -87,6 +87,12 @@ All three invariants above survive at declaration granularity. Comparison is aga
 
 What does not come back is a value we never wrote. If a differ strips the attribute while a popover is open, floating-ui's coordinates are gone until something recomputes them, and `api.reposition()` is the documented repair. That is deliberately the consumer's call: a morph only happens in an editor, and the value is recoverable, unlike a lost `data-scope`.
 
+### `normalize.ts`
+
+`normalizeProps`, passed to every `connect()` in the package instead of the one from `@zag-js/vanilla`.
+
+One line differs: a `style` object stays an object. Vanilla's `toStyleString` flattens it to a CSS string, which forces `applyProps` down the whole-attribute path and takes floating-ui's coordinates with it. Everything else matches vanilla: the same prop renames, the same lowercasing, the same dropping of `undefined`.
+
 ### `dom.ts`
 
 `findBranded`, `boolAttribute`, `listAttribute`, `readDirection`, `defineElement`.

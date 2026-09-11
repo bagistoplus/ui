@@ -38,6 +38,23 @@ export function boolAttribute(el: Element, name: string): boolean | undefined {
   return value !== "false";
 }
 
+/**
+ * A numeric attribute. Absent or unparseable gives `undefined`, so the machine
+ * keeps its own default rather than being handed a `NaN` that reaches
+ * `Math.round` and spreads.
+ */
+export function numberAttribute(el: Element, name: string): number | undefined {
+  const value = el.getAttribute(name);
+
+  if (value == null || value.trim() === "") {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
 export function listAttribute(value: string | null): string[] | undefined {
   if (value == null) {
     return undefined;

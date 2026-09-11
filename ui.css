@@ -71,6 +71,49 @@
     display: none;
   }
 
+  /* Popover. The root takes no Zag part of its own, but it is still a box: it is
+     what the trigger and the positioner sit in. */
+  ui-popover,
+  ui-popover-anchor,
+  ui-popover-title,
+  ui-popover-description {
+    display: block;
+  }
+
+  /* Same guard as the accordion and tabs panels, and for the same reason: Zag
+     applies `hidden` here, and `[hidden] { display: none }` is a USER AGENT rule
+     that any author rule would beat, leaving a closed popover visible and still
+     tabbable. */
+  ui-popover-content:not([hidden]):not([delegate]) {
+    display: block;
+  }
+
+  /* floating-ui owns part of this element's inline style. Zag's props give it
+     `position: absolute` and a `transform` reading `var(--x)` and `var(--y)`,
+     and `@zag-js/popper` writes those two values in once it has measured. Do not
+     write `transform`, `top` or `left` on it. */
+  ui-popover-positioner {
+    display: block;
+  }
+
+  /* Inline boxes: the indicator sits in the trigger's row, and the arrow is a
+     small positioned square whose tip fills it. */
+  ui-popover-indicator,
+  ui-popover-arrow,
+  ui-popover-arrow-tip {
+    display: inline-flex;
+  }
+
+  /* Before upgrade there is no `hidden` on the content yet, so the panel would
+     paint open and then vanish.
+
+     The `default-open` clause is not decoration. That popover is meant to be
+     visible on first paint, so hiding it until the bundle runs is the one case
+     where the guard would be wrong rather than merely early. */
+  ui-popover:not(:defined):not([default-open]) ui-popover-positioner {
+    display: none;
+  }
+
   /* `delegate` hands Zag's props to the single element child, so the host must
      cost no layout of its own. Last in the layer, and every rule above it that
      could match a delegating host carries `:not([delegate])`. */
@@ -83,7 +126,18 @@
   ui-tabs-list[delegate],
   ui-tabs-trigger[delegate],
   ui-tabs-content[delegate],
-  ui-tabs-indicator[delegate] {
+  ui-tabs-indicator[delegate],
+  ui-popover[delegate],
+  ui-popover-anchor[delegate],
+  ui-popover-trigger[delegate],
+  ui-popover-indicator[delegate],
+  ui-popover-positioner[delegate],
+  ui-popover-content[delegate],
+  ui-popover-title[delegate],
+  ui-popover-description[delegate],
+  ui-popover-close-trigger[delegate],
+  ui-popover-arrow[delegate],
+  ui-popover-arrow-tip[delegate] {
     display: contents;
   }
 }

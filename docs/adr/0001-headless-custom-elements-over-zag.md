@@ -130,7 +130,15 @@ It also means the enter needs no special handling. A transition cannot run on an
 
 Presence is opt in rather than default because its cost belongs to whoever asked for animation. Every collapsible part gains a second machine and a second subscription, and an animation whose `animationend` never arrives holds the panel unhidden and tabbable until it does. Zag bounds the common causes. It does not bound all of them.
 
-The name matches `@zag-js/presence`, and the mechanism generalises to `ui-dialog`, `ui-popover` and `ui-menu`, which will need exactly the same thing.
+The name matches `@zag-js/presence`.
+
+### Opt in or opt out follows arity
+
+Popover inverts the default: its content animates unless you write `presence="false"` on it.
+
+The difference is arity rather than taste. An accordion has one panel per item, so a single switch on the root beats N switches on N items, and defaulting it on would spin up a machine per item for consumers who animate nothing. A popover has exactly one content, so there is nothing to aggregate, the switch belongs on the element it governs, and the cost of leaving it on is one machine.
+
+Leaving it on is also close to free for anyone who animates nothing, because `@zag-js/presence` keys on `animation-name` and lets `hidden` land on the same frame when none is declared. The rule generalises: on by default where a component has one presence bearing part, opt in where it has one per item.
 
 ## What ships
 
@@ -192,9 +200,15 @@ Server rendered pages break that assumption. A DOM diffing library that patches 
 
 ### `style` is applied per declaration, not as an attribute
 
+This needed two changes, not one, and the second was only found because the first appeared to work.
+
 The first version serialised a Zag style object to a CSS string and wrote it as an ordinary `style` attribute, on the grounds that the attribute path kept all three invariants above for free. That was wrong, and popover is what proved it.
 
 A Zag style object is sometimes only a template. `getPositionerProps().style` contains `transform: translate3d(var(--x), var(--y), 0)`, and the coordinates never appear in the object: `@zag-js/popper` writes `--x` and `--y` directly with `setProperty` once floating-ui has measured. Replacing the whole attribute deletes them, the `transform` becomes invalid at computed-value time and resolves to `none`, and the panel lands at its containing block's origin. It would have happened on the first re-render after every open, because floating-ui's `onComplete` sets `currentPlacement`, which wakes the subscription that schedules that render.
+
+The package also stops using `normalizeProps` from `@zag-js/vanilla`, which is where the attribute was really coming from. Its `toStyleString` flattens a style object into a CSS string before the applier ever sees it, so `applyProps` had no object to work with and no choice but to write an attribute. `src/core/normalize.ts` is a copy of it that differs in one line: a style object stays an object. Everything else, the prop renames, the lowercasing, dropping `undefined`, is unchanged.
+
+That ordering is worth recording as a lesson rather than a footnote. The per-declaration applier was written first, its unit tests passed because they hand it objects directly, and it was entirely inert for every real component until the normalizer changed too. A test that constructs its own input cannot tell you what the production path does.
 
 So each declaration is compared, set and removed on its own. The invariants hold at declaration granularity rather than attribute granularity, and the component gains the property the attribute path structurally could not have: it no longer overwrites inline style it did not write. That is floating-ui's coordinates, and it is also a consumer's own `style` on the element, which the hotspot block relies on.
 

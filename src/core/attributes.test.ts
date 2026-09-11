@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import "../accordion/index";
+import "../popover/index";
 import "../tabs/index";
 
 /**
@@ -27,6 +28,17 @@ const ELEMENTS = [
   "ui-tabs-trigger",
   "ui-tabs-content",
   "ui-tabs-indicator",
+  "ui-popover",
+  "ui-popover-anchor",
+  "ui-popover-trigger",
+  "ui-popover-indicator",
+  "ui-popover-positioner",
+  "ui-popover-content",
+  "ui-popover-title",
+  "ui-popover-description",
+  "ui-popover-close-trigger",
+  "ui-popover-arrow",
+  "ui-popover-arrow-tip",
 ];
 
 /** Every attribute the package documents, plus the universal ones. */
@@ -44,6 +56,26 @@ const AUTHORED = [
   "translations-list-label",
   "loop-focus",
   "composite",
+  "default-open",
+  "modal",
+  "auto-focus",
+  "restore-focus",
+  "close-on-interact-outside",
+  "close-on-escape",
+  "default-trigger-value",
+  "translations-close-trigger-label",
+  "positioning-placement",
+  "positioning-strategy",
+  "positioning-gutter",
+  "positioning-shift",
+  "positioning-overflow-padding",
+  "positioning-arrow-padding",
+  "positioning-flip",
+  "positioning-slide",
+  "positioning-overlap",
+  "positioning-same-width",
+  "positioning-fit-viewport",
+  "positioning-hide-when-detached",
 ];
 
 /** Reflected on purpose, and covered by their own tests. */

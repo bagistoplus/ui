@@ -47,6 +47,7 @@ export default defineConfig({
         text: "Components",
         items: [
           { text: "Accordion", link: "/components/accordion" },
+          { text: "Popover", link: "/components/popover" },
           { text: "Tabs", link: "/components/tabs" },
         ],
       },

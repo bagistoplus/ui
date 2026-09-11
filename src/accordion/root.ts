@@ -1,7 +1,8 @@
 import * as accordion from "@zag-js/accordion";
-import { VanillaMachine, normalizeProps } from "@zag-js/vanilla";
+import { VanillaMachine } from "@zag-js/vanilla";
 
 import { boolAttribute, listAttribute, readDirection } from "../core/dom";
+import { normalizeProps } from "../core/normalize";
 import { ZagRootElement } from "../core/root";
 import { ACCORDION_ROOT } from "./brands";
 
