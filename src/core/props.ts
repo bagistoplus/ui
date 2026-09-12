@@ -22,7 +22,7 @@ interface Applied {
 
 const applied = new WeakMap<Element, Map<string, Applied>>();
 
-const PROPERTIES = new Set(["value", "checked", "selected"]);
+const PROPERTIES = new Set(["value", "checked", "selected", "defaultValue", "defaultChecked"]);
 
 export function applyProps(el: Element, props: Props, scope: string): void {
   let scopes = applied.get(el);

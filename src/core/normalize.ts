@@ -7,12 +7,20 @@ const propMap: Record<string, string> = {
   onDoubleClick: "onDblclick",
   htmlFor: "for",
   className: "class",
-  defaultValue: "value",
-  defaultChecked: "checked",
 };
 
-/** SVG attributes whose casing is part of the name. */
-const CASE_SENSITIVE = new Set(["viewBox", "preserveAspectRatio"]);
+/**
+ * SVG attributes whose casing is part of the name, and the two DOM properties
+ * that are written as properties and so keep theirs.
+ *
+ * Vanilla's normalizer maps `defaultValue` to `value`. That is wrong for a
+ * text field a machine only seeds: `value` written on every render replaces
+ * what the user is typing with the machine's formatted number, and `1,` loses
+ * its separator before the `5` arrives. `defaultValue` is what Zag means, and
+ * the browser already gives it the right semantics: it seeds the field and
+ * stops mattering once the field is dirty.
+ */
+const CASE_SENSITIVE = new Set(["viewBox", "preserveAspectRatio", "defaultValue", "defaultChecked"]);
 
 /**
  * Ours rather than the one from `@zag-js/vanilla`, for exactly one reason.

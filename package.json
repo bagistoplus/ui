@@ -34,6 +34,10 @@
       "types": "./dist/navigation-menu/index.d.ts",
       "default": "./dist/navigation-menu/index.js"
     },
+    "./number-input": {
+      "types": "./dist/number-input/index.d.ts",
+      "default": "./dist/number-input/index.js"
+    },
     "./popover": {
       "types": "./dist/popover/index.d.ts",
       "default": "./dist/popover/index.js"
@@ -61,6 +65,7 @@
     "@zag-js/marquee": "^1.43.3",
     "@zag-js/menu": "^1.43.3",
     "@zag-js/navigation-menu": "^1.43.3",
+    "@zag-js/number-input": "^1.43.3",
     "@zag-js/popover": "^1.43.3",
     "@zag-js/presence": "^1.43.3",
     "@zag-js/tabs": "^1.43.3",

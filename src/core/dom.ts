@@ -73,6 +73,15 @@ export function readDirection(el: Element): "ltr" | "rtl" {
 }
 
 /**
+ * The nearest `lang`, for a machine that parses or formats by locale. Zag
+ * assumes `en-US` when told nothing, and a page sets its language once, on
+ * the document, not on every root. Undefined keeps Zag's default.
+ */
+export function readLocale(el: Element): string | undefined {
+  return el.closest("[lang]")?.getAttribute("lang") || undefined;
+}
+
+/**
  * Custom element names are a global registry. Losing the race is silent unless
  * we say so, and a silent loss looks like the package simply not working.
  */

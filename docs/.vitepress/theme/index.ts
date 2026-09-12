@@ -23,6 +23,7 @@ export default {
       import("../../../src/marquee/index");
       import("../../../src/menu/index");
       import("../../../src/navigation-menu/index");
+      import("../../../src/number-input/index");
       import("../../../src/popover/index");
       import("../../../src/tabs/index");
     }

@@ -52,6 +52,7 @@ export default defineConfig({
           { text: "Marquee", link: "/components/marquee" },
           { text: "Menu", link: "/components/menu" },
           { text: "Navigation Menu", link: "/components/navigation-menu" },
+          { text: "Number Input", link: "/components/number-input" },
           { text: "Popover", link: "/components/popover" },
           { text: "Tabs", link: "/components/tabs" },
         ],

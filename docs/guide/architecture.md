@@ -109,11 +109,11 @@ What does not come back is a value we never wrote. If a differ strips the attrib
 
 `normalizeProps`, passed to every `connect()` in the package instead of the one from `@zag-js/vanilla`.
 
-One line differs: a `style` object stays an object. Vanilla's `toStyleString` flattens it to a CSS string, which forces `applyProps` down the whole-attribute path and takes floating-ui's coordinates with it. Everything else matches vanilla: the same prop renames, the same lowercasing, the same dropping of `undefined`.
+Two things differ. A `style` object stays an object: vanilla's `toStyleString` flattens it to a CSS string, which forces `applyProps` down the whole-attribute path and takes floating-ui's coordinates with it. And `defaultValue` and `defaultChecked` keep their names and are written as DOM properties, where vanilla renames them to `value` and `checked`: compared against the DOM, `value` would be rewritten on every render and replace what the user is typing. Everything else matches vanilla: the same prop renames, the same lowercasing, the same dropping of `undefined`.
 
 ### `dom.ts`
 
-`findBranded`, `boolAttribute`, `listAttribute`, `readDirection`, `defineElement`.
+`findBranded`, `boolAttribute`, `numberAttribute`, `listAttribute`, `readDirection`, `readLocale`, `defineElement`.
 
 `boolAttribute` returns `boolean | undefined`, and the `undefined` is the interesting part: an absent attribute means the caller omits the prop entirely so the machine applies its own default. Presence gives `true`, and the literal `"false"` gives `false`. Presence alone cannot turn off a prop that defaults to `true`, and about half of Zag's booleans do.
 

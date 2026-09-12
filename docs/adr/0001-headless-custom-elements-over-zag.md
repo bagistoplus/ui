@@ -76,6 +76,8 @@ Machine options arrive as individual observed attributes, not one JSON blob:
 
 Each attribute is observed on its own, so a morph pushes only what changed. The markup is readable in devtools and self documenting, which a `config='{"multiple":true}'` blob is not. The cost is a small per component attribute schema with type coercion for booleans, numbers and comma lists.
 
+Two props are inherited from the page rather than written on every root. `dir` is read from the nearest `[dir]` ancestor, and `locale` from the nearest `[lang]`, because a storefront sets both once on the document. An attribute on the root wins over either.
+
 ### A boolean attribute has three states
 
 Absent means "use the machine's default", present means `true`, and the literal value `"false"` means `false`.
@@ -100,6 +102,8 @@ This came up over `positioning`, which has 24 fields. The prefix is a rule rathe
 The `positioning-*` list and its parser live once, in `src/core/positioning.ts`, and every root that positions with `@zag-js/popper` spreads the same twelve names into its observed attributes. Two copies would drift, and the drift would be invisible until one component accepted an attribute the other silently ignored.
 
 `ids` is the one object prop that does **not** get attributes. The only case that matters is stopping Zag renaming an element a differ keys on, and `authoredId()` already covers it.
+
+`formatOptions` on the number input is the one exception to the prefix. It is an `Intl.NumberFormatOptions`, not a Zag object, and three of its fields are exposed: `minimum-fraction-digits`, `maximum-fraction-digits` and `use-grouping`, under the `Intl` names. The prefix would have made `format-options-maximum-fraction-digits`, which nobody would write in a template, for an object whose scalar surface is not Zag's to grow.
 
 ### An authored id is honoured whether Zag names the part flatly or by value
 
@@ -337,6 +341,8 @@ The first version serialised a Zag style object to a CSS string and wrote it as 
 A Zag style object is sometimes only a template. `getPositionerProps().style` contains `transform: translate3d(var(--x), var(--y), 0)`, and the coordinates never appear in the object: `@zag-js/popper` writes `--x` and `--y` directly with `setProperty` once floating-ui has measured. Replacing the whole attribute deletes them, the `transform` becomes invalid at computed-value time and resolves to `none`, and the panel lands at its containing block's origin. It would have happened on the first re-render after every open, because floating-ui's `onComplete` sets `currentPlacement`, which wakes the subscription that schedules that render.
 
 The package also stops using `normalizeProps` from `@zag-js/vanilla`, which is where the attribute was really coming from. Its `toStyleString` flattens a style object into a CSS string before the applier ever sees it, so `applyProps` had no object to work with and no choice but to write an attribute. `src/core/normalize.ts` is a copy of it that differs in one line: a style object stays an object. Everything else, the prop renames, the lowercasing, dropping `undefined`, is unchanged.
+
+The number input found a second difference. Vanilla renames `defaultValue` to `value`, which a cache backed applier writes once. Compared against the DOM, `value` is rewritten on every render, and a render follows every keystroke: the field's `1,` became `1` before the `5` arrived, because Zag's `defaultValue` is the formatted number and the formatted number has no trailing separator. `defaultValue` and `defaultChecked` are now written as the DOM properties they name. The browser gives them the semantics Zag means: they seed a field and stop mattering once it is dirty, and Zag writes the field's `value` itself when the machine changes it.
 
 That ordering is worth recording as a lesson rather than a footnote. The per-declaration applier was written first, its unit tests passed because they hand it objects directly, and it was entirely inert for every real component until the normalizer changed too. A test that constructs its own input cannot tell you what the production path does.
 
