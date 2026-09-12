@@ -194,6 +194,8 @@ Two of Zag's dialog props are `role` and `aria-label`, both of which it writes o
 
 `aria-label` gets no attribute at all. Zag emits the key only when its own prop is set, the normalizer drops `undefined`, and `applyProps` removes only what it wrote, so an `aria-label` the consumer writes on `ui-dialog-content` survives every render. That differs from tabs, where Zag returns `aria-label` from `getListProps` unconditionally and `translations-list-label` had to exist. The rule is: the package writes only what Zag emits, so anything Zag leaves out stays authorable, and an attribute for it would be one more thing to keep in sync.
 
+The same rule covers the legacy presentational attributes. `align` is one: the browser maps `align="center"` on any HTML element to `text-align: center`, custom elements included, so a navigation menu viewport written with Zag's prop name had its links centred by the user agent stylesheet. The attribute is `viewport-align`. The test for a candidate name is whether the browser already means something by it on an element that is not a form control: `align`, `dir`, `hidden`, `lang` and `title` all do, and only `dir` is used here, because its meaning is the one we want.
+
 ## What ships
 
 ESM and `.d.ts`. Consumers bundle it themselves.

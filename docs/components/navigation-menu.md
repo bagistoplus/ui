@@ -97,8 +97,8 @@ One shared surface under the bar. Zag writes `--viewport-x`, `--viewport-width` 
       </li>
     </ul>
   </ui-navigation-menu-list>
-  <ui-navigation-menu-viewport-positioner align="start" class="absolute left-0 top-full z-20 mt-1 translate-x-[var(--viewport-x)] transition-transform duration-200">
-    <ui-navigation-menu-viewport align="start" class="ui-doc-fade relative h-[var(--viewport-height)] w-[var(--viewport-width)] overflow-hidden rounded-lg border border-gray-200 bg-white text-sm shadow-lg transition-[width,height] duration-200 dark:border-zinc-800 dark:bg-zinc-900">
+  <ui-navigation-menu-viewport-positioner viewport-align="start" class="absolute left-0 top-full z-20 mt-1 translate-x-(--viewport-x) transition-transform duration-200">
+    <ui-navigation-menu-viewport viewport-align="start" class="ui-doc-fade relative h-(--viewport-height) w-(--viewport-width) overflow-hidden rounded-lg border border-gray-200 bg-white text-sm shadow-lg transition-[width,height] duration-200 dark:border-zinc-800 dark:bg-zinc-900">
       <ui-navigation-menu-content value="shop" presence class="ui-doc-nav-motion absolute left-0 top-0 w-64 p-2">
         <ui-navigation-menu-link delegate><a href="#clothing" class="block rounded px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800">Clothing</a></ui-navigation-menu-link>
         <ui-navigation-menu-link delegate><a href="#shoes" class="block rounded px-2 py-1.5 hover:bg-gray-100 dark:hover:bg-zinc-800">Shoes</a></ui-navigation-menu-link>
@@ -139,7 +139,7 @@ ui-navigation-menu-content[data-motion="to-end"]     { animation: exit-to-right 
 | `ui-navigation-menu-viewport` | Viewport mode. The one shared surface, sized and placed by Zag |
 | `ui-navigation-menu-trigger-proxy` | Viewport mode. A hidden focus stop after the trigger that routes Tab into the content |
 | `ui-navigation-menu-viewport-proxy` | Viewport mode. Points `aria-owns` at the item's content |
-| `ui-navigation-menu-item-indicator` | Optional. A styling hook inside an item, carrying `data-state` |
+| `ui-navigation-menu-item-indicator` | Optional. Marks the open item: Zag hides it unless the item is open, so it is not a chevron hook. Rotate a chevron from the trigger's `data-state` instead |
 | `ui-navigation-menu-indicator` | Optional. One element under the bar that follows the active trigger through `--trigger-*` |
 | `ui-navigation-menu-arrow` | Optional. Inside the indicator |
 
@@ -180,9 +180,11 @@ There is deliberately no `value` attribute for controlled state, and no `show()`
 | `ui-navigation-menu-link` | `value` | The item it belongs to. Defaults to the enclosing item's or content's |
 | `ui-navigation-menu-link` | `current` | Writes `aria-current="page"` and `data-current` |
 | `ui-navigation-menu-link` | `close-on-click` | `close-on-click="false"` keeps the panel open after the link is followed |
-| `ui-navigation-menu-viewport` | `align` | `start`, `center` or `end`. Where `--viewport-x` lines the surface up against the trigger |
+| `ui-navigation-menu-viewport` | `viewport-align` | `start`, `center` or `end`, default `center`. Where `--viewport-x` lines the surface up against the trigger |
 | `ui-navigation-menu-viewport` | `presence` | On by default. `presence="false"` hides it at once |
-| `ui-navigation-menu-viewport-positioner` | `align` | The same value, for the `data-align` hook |
+| `ui-navigation-menu-viewport-positioner` | `viewport-align` | The same value, for the `data-align` hook |
+
+Not `align`: that is a legacy presentational attribute, and the browser maps `align="center"` on any HTML element to `text-align: center`, custom elements included.
 
 ### Presence
 

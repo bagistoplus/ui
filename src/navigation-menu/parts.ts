@@ -309,8 +309,13 @@ export class UINavigationMenuContent extends RootPart {
   }
 }
 
+/**
+ * Not `align`. That is a legacy presentational attribute, and the browser maps
+ * `align="center"` on any HTML element to `text-align: center`, custom
+ * elements included. The panel's text went centred with it.
+ */
 export class UINavigationMenuViewportPositioner extends RootPart {
-  static readonly observedAttributes = ["align"];
+  static readonly observedAttributes = ["viewport-align"];
 
   protected propsFor(api: navigationMenu.Api): Props {
     return api.getViewportPositionerProps({ align: readAlign(this) }) as Props;
@@ -322,7 +327,7 @@ export class UINavigationMenuViewportPositioner extends RootPart {
  * every part there is exactly one of.
  */
 export class UINavigationMenuViewport extends RootPart {
-  static readonly observedAttributes = ["align", "presence"];
+  static readonly observedAttributes = ["viewport-align", "presence"];
 
   #presence: PresenceController | undefined;
 
@@ -385,7 +390,7 @@ export class UINavigationMenuArrow extends RootPart {
 }
 
 function readAlign(el: Element): "start" | "center" | "end" | undefined {
-  const align = el.getAttribute("align");
+  const align = el.getAttribute("viewport-align");
 
   return align === "start" || align === "center" || align === "end" ? align : undefined;
 }

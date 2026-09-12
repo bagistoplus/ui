@@ -148,8 +148,8 @@ function viewport(attrs = "", contentAttrs = "presence"): string {
   return `
     <ui-navigation-menu ${attrs}>
       <ui-navigation-menu-list><ul>${item("a")}${item("b")}</ul></ui-navigation-menu-list>
-      <ui-navigation-menu-viewport-positioner align="start">
-        <ui-navigation-menu-viewport align="start" class="animated">
+      <ui-navigation-menu-viewport-positioner viewport-align="start">
+        <ui-navigation-menu-viewport viewport-align="start" class="animated">
           <ui-navigation-menu-content value="a" ${contentAttrs} class="animated">
             <ui-navigation-menu-link delegate><a href="#a1">A one</a></ui-navigation-menu-link>
             <ui-navigation-menu-link delegate><a href="#a2">A two</a></ui-navigation-menu-link>
@@ -442,6 +442,8 @@ describe("viewport", () => {
     expect(surface.dataset.part).toBe("viewport");
     expect(surface.hidden).toBe(true);
     expect(surface.getAttribute("data-align")).toBe("start");
+    // `align` itself would have been read by the browser as text alignment.
+    expect(surface.hasAttribute("align")).toBe(false);
 
     await userEvent.click(trigger(host, "a"));
     await waitFor(() => isOpen(surface));
@@ -487,7 +489,7 @@ describe("viewport", () => {
     expect(surface.hidden).toBe(false);
     await waitFor(() => surface.hidden);
 
-    const abrupt = await mount(viewport().replace('<ui-navigation-menu-viewport align="start" class="animated">', '<ui-navigation-menu-viewport align="start" presence="false" class="animated">'));
+    const abrupt = await mount(viewport().replace('<ui-navigation-menu-viewport viewport-align="start" class="animated">', '<ui-navigation-menu-viewport viewport-align="start" presence="false" class="animated">'));
     const plain = abrupt.querySelector<HTMLElement>("ui-navigation-menu-viewport")!;
 
     await userEvent.click(trigger(abrupt, "a"));
@@ -522,7 +524,7 @@ describe("viewport", () => {
   });
 
   it("keeps an authored viewport id", async () => {
-    const host = await mount(viewport().replace('<ui-navigation-menu-viewport align="start"', '<ui-navigation-menu-viewport id="surface" align="start"'));
+    const host = await mount(viewport().replace('<ui-navigation-menu-viewport viewport-align="start"', '<ui-navigation-menu-viewport id="surface" viewport-align="start"'));
 
     expect(host.querySelector("ui-navigation-menu-viewport")!.id).toBe("surface");
   });
