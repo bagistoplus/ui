@@ -2,6 +2,8 @@
 
 `@bagistoplus/ui` ships headless custom elements built on Zag machines. No shadow DOM, no styles beyond what the browser forces us to declare, and no framework dependency. Consumers write their own markup and style it with whatever CSS they already use, Tailwind included.
 
+One component, the before/after, runs a machine the package wrote itself because Zag has none. ADR 0002 records what that machine must look like.
+
 The package exists for two reasons. BlocksPro's interactive primitives are welded to Alpine, and nothing outside BlocksPro can use them. Both problems have the same fix: move the Zag layer onto the platform's own component model.
 
 ## Containers by default, `delegate` to opt out

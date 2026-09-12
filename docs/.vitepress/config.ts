@@ -47,6 +47,7 @@ export default defineConfig({
         text: "Components",
         items: [
           { text: "Accordion", link: "/components/accordion" },
+          { text: "Before After", link: "/components/before-after" },
           { text: "Carousel", link: "/components/carousel" },
           { text: "Dialog", link: "/components/dialog" },
           { text: "Marquee", link: "/components/marquee" },

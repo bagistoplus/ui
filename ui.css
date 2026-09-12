@@ -324,6 +324,13 @@
     display: block;
   }
 
+  /* Before/after. The root is the box the machine measures a press against
+     and the box both slots fill, so it is a real box. The four parts are
+     positioned absolutely by the machine, which makes them blocks already. */
+  ui-before-after {
+    display: block;
+  }
+
   /* The animation Zag's marquee drives but does not write. It sets the
      duration, the delay, the loop count and the travel as custom properties
      on the root, toggles `data-paused` there, and restarts by resetting
@@ -394,6 +401,11 @@
   ui-number-input-decrement-trigger[delegate],
   ui-number-input-value-text[delegate],
   ui-number-input-scrubber[delegate],
+  ui-before-after[delegate],
+  ui-before-after-before[delegate],
+  ui-before-after-after[delegate],
+  ui-before-after-separator[delegate],
+  ui-before-after-handle[delegate],
   ui-popover[delegate],
   ui-popover-anchor[delegate],
   ui-popover-trigger[delegate],

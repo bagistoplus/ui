@@ -130,6 +130,7 @@ Abstract classes express all six natively. A new component supplies:
 3. **Optionally a collection layer**, like `ui-accordion-item`. It implements `PartOwner` by passing through to the root. Components whose parts hang directly off the root use the root as the owner instead; `PartOwner` being an interface is the seam for that, and nothing more has been built for it because nothing exercises it yet.
 4. **Parts**, each a subclass answering `ownerBrand`, `register`, `unregister` and `propsFor`.
 5. **`index.ts`** — the `defineElement` calls and the tag name map. The only file that mentions a tag name.
+6. **`machine.ts`**, only when Zag has no machine for the behaviour. It holds what a `@zag-js/*` package would: the anatomy, a `dom` that finds elements by id through the scope, the schema, the machine and `connect()`. ADR 0002 sets the bar. The before/after is the one component that has one.
 
 ## Testing
 
