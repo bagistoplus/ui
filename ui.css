@@ -248,11 +248,35 @@
      are real boxes. An item is a grid cell, which is why the consumer's own
      grid rule on the group must not be broken by a `display: contents` host. */
   ui-carousel,
-  ui-carousel-item-group,
   ui-carousel-item,
   ui-carousel-control,
   ui-carousel-indicator-group {
     display: block;
+  }
+
+  /* The grid Zag writes on the item group on its first render, as a default,
+     so the slides are a row before the bundle runs rather than a stack that
+     snaps into one. Zag's inline style takes over on upgrade, which is also
+     what turns it vertical when `orientation` says so. The three custom
+     properties it reads come from the root: write `--slides-per-page` and
+     `--slide-spacing` inline on `ui-carousel` when they are not the defaults. */
+  ui-carousel-item-group:not([delegate]) {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: var(--slide-item-size);
+    gap: var(--slide-spacing);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  ui-carousel {
+    --slides-per-page: 1;
+    --slide-spacing: 0px;
+    --slide-item-size: calc(
+      100% / var(--slides-per-page) - var(--slide-spacing) * (var(--slides-per-page) - 1) / var(--slides-per-page)
+    );
   }
 
   /* An item or indicator written `hidden` is not counted, and `[hidden] {

@@ -28,9 +28,6 @@ async function mount(html: string): Promise<HTMLElement> {
   return host;
 }
 
-const GROUP_STYLE =
-  "display:grid;gap:var(--slide-spacing);scroll-snap-type:x mandatory;grid-auto-flow:column;scrollbar-width:none;overscroll-behavior-x:contain;grid-auto-columns:var(--slide-item-size);overflow-x:auto;";
-
 function item(label: string, attrs = ""): string {
   return `<ui-carousel-item ${attrs} style="height:40px">${label}</ui-carousel-item>`;
 }
@@ -42,7 +39,7 @@ function items(count: number): string {
 function basic(attrs = "", slides = 3, extra = ""): string {
   return `
     <ui-carousel ${attrs}>
-      <ui-carousel-item-group style="${GROUP_STYLE}">${items(slides)}</ui-carousel-item-group>
+      <ui-carousel-item-group>${items(slides)}</ui-carousel-item-group>
       <ui-carousel-prev-trigger delegate><button>Prev</button></ui-carousel-prev-trigger>
       <ui-carousel-next-trigger delegate><button>Next</button></ui-carousel-next-trigger>
       ${extra}
@@ -110,6 +107,7 @@ describe("anatomy", () => {
     const host = await mount(basic());
 
     expect(getComputedStyle(root(host)).display).toBe("block");
+    expect(getComputedStyle(host.querySelector("ui-carousel-item-group")!).gridAutoFlow).toBe("column");
     expect(getComputedStyle(host.querySelector("ui-carousel-prev-trigger")!).display).toBe("contents");
   });
 });
@@ -127,7 +125,7 @@ describe("counting and numbering", () => {
   it("takes slide-count and index from the consumer when written", async () => {
     const host = await mount(`
       <ui-carousel slide-count="2">
-        <ui-carousel-item-group style="${GROUP_STYLE}">
+        <ui-carousel-item-group>
           ${item("b", 'index="1"')}${item("a", 'index="0"')}
         </ui-carousel-item-group>
       </ui-carousel>
@@ -140,7 +138,7 @@ describe("counting and numbering", () => {
   it("does not count a hidden item, and follows the attribute when it toggles", async () => {
     const host = await mount(`
       <ui-carousel>
-        <ui-carousel-item-group style="${GROUP_STYLE}">
+        <ui-carousel-item-group>
           ${item("a")}${item("b", "hidden")}${item("c")}
         </ui-carousel-item-group>
       </ui-carousel>
@@ -268,6 +266,44 @@ describe("paging", () => {
   });
 });
 
+describe("mouse drag", () => {
+  /** A press, a move of a few pixels, a release, as the pointer events Zag listens for. */
+  async function drag(group: HTMLElement, distance: number): Promise<void> {
+    group.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, button: 0, clientX: 100, clientY: 20 }));
+    await frames(1);
+
+    for (let moved = 0; moved < distance; moved++) {
+      document.dispatchEvent(
+        new PointerEvent("pointermove", { bubbles: true, clientX: 100 - moved, clientY: 20, movementX: -1 }),
+      );
+      await frames(1);
+    }
+
+    document.dispatchEvent(new PointerEvent("pointerup", { bubbles: true, clientX: 100 - distance, clientY: 20 }));
+    await new Promise((resolve) => setTimeout(resolve, 400));
+  }
+
+  it("turns snapping off for the drag, so a short drag does not change the page", async () => {
+    const host = await mount(basic("allow-mouse-drag"));
+    const group = host.querySelector<HTMLElement>("ui-carousel-item-group")!;
+    let snapDuringDrag = "";
+
+    group.addEventListener("pointermove", () => {}, { once: true });
+    root(host).addEventListener("ui-carousel:drag-status-change", (event) => {
+      if ((event as CustomEvent<{ type: string }>).detail.type === "dragging") {
+        snapDuringDrag = group.style.scrollSnapType;
+      }
+    });
+
+    await drag(group, 3);
+
+    expect(snapDuringDrag).toBe("none");
+    expect(root(host).api!.page).toBe(0);
+    expect(group.scrollLeft).toBe(0);
+    expect(group.style.scrollSnapType).toBe("x mandatory");
+  });
+});
+
 describe("indicators", () => {
   it("stamps one clone per page from the template, and re-stamps when the page count changes", async () => {
     const host = await mount(basic("", 4, DOTS));
@@ -281,6 +317,24 @@ describe("indicators", () => {
     await frames(6);
 
     expect(dots(host)).toHaveLength(2);
+  });
+
+  it("stamps again after something else removed the clones", async () => {
+    const host = await mount(basic("", 3, DOTS));
+
+    expect(dots(host)).toHaveLength(3);
+
+    for (const dot of dots(host)) {
+      dot.parentElement!.remove();
+    }
+
+    expect(dots(host)).toHaveLength(0);
+
+    root(host).flush();
+    await frames();
+
+    expect(dots(host)).toHaveLength(3);
+    expect(dots(host).map((dot) => dot.id)).toEqual(["dots-0", "dots-1", "dots-2"]);
   });
 
   it("names the clones after the group's id, and leaves authored indicators alone", async () => {
@@ -392,7 +446,7 @@ describe("naming the parts", () => {
   it("keeps every authored id", async () => {
     const host = await mount(`
       <ui-carousel id="mine">
-        <ui-carousel-item-group id="mine-group" style="${GROUP_STYLE}">
+        <ui-carousel-item-group id="mine-group">
           ${item("a", 'id="mine-0"')}${item("b", 'id="mine-1"')}
         </ui-carousel-item-group>
         <ui-carousel-prev-trigger delegate><button id="mine-prev">Prev</button></ui-carousel-prev-trigger>

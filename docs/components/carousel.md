@@ -22,8 +22,6 @@ import "@bagistoplus/ui/carousel";
 
 ## Examples
 
-Every example writes the grid on the item group inline. Zag writes the same declarations on the first render, so this is only what the page looks like before the bundle runs.
-
 ### Basic
 
 Three slides, previous and next, and dots stamped from a template.
@@ -31,7 +29,7 @@ Three slides, previous and next, and dots stamped from a template.
 <ComponentExample>
 
 <ui-carousel class="relative w-full">
-  <ui-carousel-item-group class="rounded-lg" style="display:grid;gap:var(--slide-spacing);scroll-snap-type:x mandatory;grid-auto-flow:column;scrollbar-width:none;overscroll-behavior-x:contain;grid-auto-columns:var(--slide-item-size);overflow-x:auto;">
+  <ui-carousel-item-group class="rounded-lg">
     <ui-carousel-item class="flex h-40 items-center justify-center rounded-lg bg-blue-100 text-blue-900 dark:bg-blue-950 dark:text-blue-100">One</ui-carousel-item>
     <ui-carousel-item class="flex h-40 items-center justify-center rounded-lg bg-emerald-100 text-emerald-900 dark:bg-emerald-950 dark:text-emerald-100">Two</ui-carousel-item>
     <ui-carousel-item class="flex h-40 items-center justify-center rounded-lg bg-amber-100 text-amber-900 dark:bg-amber-950 dark:text-amber-100">Three</ui-carousel-item>
@@ -43,7 +41,7 @@ Three slides, previous and next, and dots stamped from a template.
     <ui-carousel-indicator-group class="flex items-center gap-2">
       <template>
         <ui-carousel-indicator delegate>
-          <button class="h-2.5 w-2.5 cursor-pointer rounded-full border-0 bg-gray-300 p-0 data-[current]:bg-blue-600 dark:bg-zinc-700"></button>
+          <button class="h-2.5 w-2.5 cursor-pointer rounded-full border-0 bg-gray-300 p-0 data-current:bg-blue-600 dark:bg-zinc-700"></button>
         </ui-carousel-indicator>
       </template>
     </ui-carousel-indicator-group>
@@ -66,7 +64,7 @@ Swipe or scroll the row sideways. The browser does the snapping, and Zag reads t
 <ComponentExample>
 
 <ui-carousel slides-per-page="2" spacing="12px" class="relative w-full">
-  <ui-carousel-item-group style="display:grid;gap:var(--slide-spacing);scroll-snap-type:x mandatory;grid-auto-flow:column;scrollbar-width:none;overscroll-behavior-x:contain;grid-auto-columns:var(--slide-item-size);overflow-x:auto;">
+  <ui-carousel-item-group>
     <ui-carousel-item class="flex h-32 items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-800">1</ui-carousel-item>
     <ui-carousel-item class="flex h-32 items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-800">2</ui-carousel-item>
     <ui-carousel-item class="flex h-32 items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-800">3</ui-carousel-item>
@@ -94,7 +92,7 @@ Swipe or scroll the row sideways. The browser does the snapping, and Zag reads t
 <ComponentExample>
 
 <ui-carousel autoplay autoplay-delay="2500" class="group relative w-full">
-  <ui-carousel-item-group class="rounded-lg" style="display:grid;gap:var(--slide-spacing);scroll-snap-type:x mandatory;grid-auto-flow:column;scrollbar-width:none;overscroll-behavior-x:contain;grid-auto-columns:var(--slide-item-size);overflow-x:auto;">
+  <ui-carousel-item-group class="rounded-lg">
     <ui-carousel-item class="flex h-32 items-center justify-center rounded-lg bg-rose-100 text-rose-900 dark:bg-rose-950 dark:text-rose-100">Spring</ui-carousel-item>
     <ui-carousel-item class="flex h-32 items-center justify-center rounded-lg bg-lime-100 text-lime-900 dark:bg-lime-950 dark:text-lime-100">Summer</ui-carousel-item>
     <ui-carousel-item class="flex h-32 items-center justify-center rounded-lg bg-orange-100 text-orange-900 dark:bg-orange-950 dark:text-orange-100">Autumn</ui-carousel-item>
@@ -119,7 +117,7 @@ The root writes `--page` and `--page-count`. A progress bar is one element and t
 <ComponentExample>
 
 <ui-carousel class="relative w-full">
-  <ui-carousel-item-group class="rounded-lg" style="display:grid;gap:var(--slide-spacing);scroll-snap-type:x mandatory;grid-auto-flow:column;scrollbar-width:none;overscroll-behavior-x:contain;grid-auto-columns:var(--slide-item-size);overflow-x:auto;">
+  <ui-carousel-item-group class="rounded-lg">
     <ui-carousel-item class="flex h-24 items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-800">A</ui-carousel-item>
     <ui-carousel-item class="flex h-24 items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-800">B</ui-carousel-item>
     <ui-carousel-item class="flex h-24 items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-800">C</ui-carousel-item>
@@ -154,15 +152,15 @@ An indicator group without a `<template>` stamps nothing. Its authored indicator
 <ComponentExample>
 
 <ui-carousel class="w-full">
-  <ui-carousel-item-group class="rounded-lg" style="display:grid;gap:var(--slide-spacing);scroll-snap-type:x mandatory;grid-auto-flow:column;scrollbar-width:none;overscroll-behavior-x:contain;grid-auto-columns:var(--slide-item-size);overflow-x:auto;">
+  <ui-carousel-item-group class="rounded-lg">
     <ui-carousel-item class="flex h-40 items-center justify-center rounded-lg bg-sky-200 text-sky-900">Sky</ui-carousel-item>
     <ui-carousel-item class="flex h-40 items-center justify-center rounded-lg bg-violet-200 text-violet-900">Violet</ui-carousel-item>
     <ui-carousel-item class="flex h-40 items-center justify-center rounded-lg bg-teal-200 text-teal-900">Teal</ui-carousel-item>
   </ui-carousel-item-group>
   <ui-carousel-indicator-group class="mt-3 flex gap-2">
-    <ui-carousel-indicator delegate><button class="h-12 w-16 cursor-pointer rounded-md border-2 border-transparent bg-sky-200 p-0 data-[current]:border-blue-600"></button></ui-carousel-indicator>
-    <ui-carousel-indicator delegate><button class="h-12 w-16 cursor-pointer rounded-md border-2 border-transparent bg-violet-200 p-0 data-[current]:border-blue-600"></button></ui-carousel-indicator>
-    <ui-carousel-indicator delegate><button class="h-12 w-16 cursor-pointer rounded-md border-2 border-transparent bg-teal-200 p-0 data-[current]:border-blue-600"></button></ui-carousel-indicator>
+    <ui-carousel-indicator delegate><button class="h-12 w-16 cursor-pointer rounded-md border-2 border-transparent bg-sky-200 p-0 data-current:border-blue-600"></button></ui-carousel-indicator>
+    <ui-carousel-indicator delegate><button class="h-12 w-16 cursor-pointer rounded-md border-2 border-transparent bg-violet-200 p-0 data-current:border-blue-600"></button></ui-carousel-indicator>
+    <ui-carousel-indicator delegate><button class="h-12 w-16 cursor-pointer rounded-md border-2 border-transparent bg-teal-200 p-0 data-current:border-blue-600"></button></ui-carousel-indicator>
   </ui-carousel-indicator-group>
 </ui-carousel>
 
@@ -175,7 +173,7 @@ An indicator group without a `<template>` stamps nothing. Its authored indicator
 <ComponentExample>
 
 <ui-carousel slides-per-page="1 640:2 1024:3" spacing="8px 1024:16px" class="relative w-full">
-  <ui-carousel-item-group style="display:grid;gap:var(--slide-spacing);scroll-snap-type:x mandatory;grid-auto-flow:column;scrollbar-width:none;overscroll-behavior-x:contain;grid-auto-columns:var(--slide-item-size);overflow-x:auto;">
+  <ui-carousel-item-group>
     <ui-carousel-item class="flex h-24 items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-800">1</ui-carousel-item>
     <ui-carousel-item class="flex h-24 items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-800">2</ui-carousel-item>
     <ui-carousel-item class="flex h-24 items-center justify-center rounded-lg bg-gray-100 dark:bg-zinc-800">3</ui-carousel-item>
@@ -200,7 +198,7 @@ An indicator group without a `<template>` stamps nothing. Its authored indicator
 Resize the window across 640px and 1024px. The page count in the text follows.
 :::
 
-The tiers are viewport widths, not the carousel's own width, so they line up with the media queries in your stylesheet. The inline style before upgrade cannot know the viewport, so render the base tier there and let the first frame correct it, or write the same tiers as media queries on `--slides-per-page` in your own CSS.
+The tiers are viewport widths, not the carousel's own width, so they line up with the media queries in your stylesheet. An inline `--slides-per-page` before upgrade cannot know the viewport, so write the base tier there and let the first frame correct it, or write the same tiers as media queries on `--slides-per-page` in your own CSS.
 
 ### Hiding slides
 
@@ -231,7 +229,7 @@ Only the attribute counts. An item hidden by a class is still a slide, because t
 
 Every element takes Zag's props on itself unless you write `delegate`, which hands them to its single element child. See [`delegate`](/guide/usage#delegate-choosing-which-element-takes-the-props) and [Styling](/guide/styling).
 
-**The item group's grid is yours to write before upgrade.** Zag's props put `display: grid`, `grid-auto-flow`, `grid-auto-columns: var(--slide-item-size)`, `gap: var(--slide-spacing)`, `scroll-snap-type` and `overflow` on it, and the root carries `--slides-per-page`, `--slide-spacing` and `--slide-item-size`. Render the same declarations inline server side, as every example here does, or the slides stack until the bundle runs.
+**The item group is a grid before upgrade.** Zag's props put `display: grid`, `grid-auto-flow`, `grid-auto-columns: var(--slide-item-size)`, `gap: var(--slide-spacing)`, `scroll-snap-type` and `overflow` on it on the first render, and `ui.css` carries the same declarations as a default, so the slides are a row from the first paint. The root's `--slides-per-page` and `--slide-spacing` default to `1` and `0px` in the stylesheet; write them inline on `ui-carousel` when yours differ, or the row is one slide wide until the bundle runs.
 
 ### Counting and numbering
 
@@ -393,4 +391,4 @@ Arrow direction follows `dir`. The item group is focusable only when nothing ins
 
 ### Before the elements upgrade
 
-Nothing is hidden and no stylesheet rule waits for the bundle. Write the item group's grid inline, as above, and the slides lay out the same before and after upgrade. Indicators stamped from a template do not exist until the first render, so render a static set server side if a flash matters, and give the group no template in that case.
+Nothing is hidden and no stylesheet rule waits for the bundle. `ui.css` lays the item group out as the same grid Zag writes, so the slides are a row before and after upgrade; write `--slides-per-page` and `--slide-spacing` inline on the root when they are not `1` and `0px`. Indicators stamped from a template do not exist until the first render, so render a static set server side if a flash matters, and give the group no template in that case.

@@ -66,8 +66,21 @@ export class UICarouselItemGroup extends CarouselPart {
     return "itemGroup";
   }
 
+  /**
+   * Zag turns snapping off for a mouse drag by writing `scroll-snap-type:
+   * none` inline itself, outside its props, and puts it back when the drag
+   * ends. Props are compared against the DOM here, so the value in the props
+   * has to say `none` too while a drag runs, or every pointer move would write
+   * snapping back on and the browser would snap on the first pixel.
+   */
   protected propsFor(api: carousel.Api): Props {
-    return api.getItemGroupProps() as Props;
+    const props = api.getItemGroupProps() as Props;
+
+    if (api.isDragging && props.style !== null && typeof props.style === "object") {
+      return { ...props, style: { ...(props.style as Props), scrollSnapType: "none" } };
+    }
+
+    return props;
   }
 }
 
@@ -179,7 +192,7 @@ export class UICarouselAutoplayTrigger extends CarouselPart {
  * is what a strip of thumbnails wants.
  */
 export class UICarouselIndicatorGroup extends CarouselPart {
-  readonly #clones: Element[] = [];
+  #clones: Element[] = [];
 
   get [CAROUSEL_INDICATOR_GROUP](): true {
     return true;
@@ -221,6 +234,10 @@ export class UICarouselIndicatorGroup extends CarouselPart {
 
     const count = api.pageSnapPoints.length;
     const groupId = this.authoredId();
+
+    // A DOM differ that re-renders the group from server markup removes the
+    // clones, since the server never sent them. Only the ones still here count.
+    this.#clones = this.#clones.filter((clone) => clone.parentElement === target);
 
     while (this.#clones.length > count) {
       this.#clones.pop()?.remove();

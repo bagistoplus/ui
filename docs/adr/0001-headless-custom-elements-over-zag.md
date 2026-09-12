@@ -332,6 +332,8 @@ When it comes back matters as much as whether. The next render is a frame away, 
 
 What does not come back is a value we never wrote. A differ that strips the attribute while a popover is open takes floating-ui's coordinates with it, and `api.reposition()` is the repair. That stays the consumer's call rather than a self heal in the positioner: a morph only happens in an editor, so no storefront visitor reaches it, and the value is recoverable, unlike a lost `data-scope`.
 
+The comparison has one more consequence, found on the carousel. Zag sometimes overrides a value from its own props imperatively: a mouse drag writes `scroll-snap-type: none` inline on the item group and restores it when the drag ends, while `getItemGroupProps().style` keeps saying `x mandatory`. A React binding never notices, since it diffs against its previous props. This applier compares against the DOM, finds `none`, and writes snapping back on at every pointer move, so the browser snapped on the first pixel. The item group part answers it by saying `none` in its own props while `api.isDragging`, so the two agree and nothing is written. The rule for the next such case: when Zag writes a declaration itself, the part mirrors it in the props for as long as Zag holds it.
+
 What a re-render legitimately costs is worth knowing, and belongs to the consumer rather than here. A differ that keys on `id` sees a keyed live node against an unkeyed incoming one and replaces it, so child elements do not survive. State does, because the machine is keyed by the item's `value`, which the server does send. Focus does not: the focused trigger becomes a new element and the browser drops focus.
 
 ## Constraints this places on every element
