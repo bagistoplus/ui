@@ -1,7 +1,7 @@
 import * as carousel from "@zag-js/carousel";
 import { VanillaMachine } from "@zag-js/vanilla";
 
-import { boolAttribute, findBranded, numberAttribute, readDirection } from "../core/dom";
+import { boolAttribute, findBranded, interpolate, numberAttribute, readDirection } from "../core/dom";
 import { normalizeProps } from "../core/normalize";
 import { ZagRootElement } from "../core/root";
 import { Tiers, numberOf } from "../core/tiers";
@@ -381,9 +381,4 @@ function order<T extends Numbered>(elements: T[]): Map<T, number> {
 /** Document order, without a tag name in sight. */
 function sorted<T extends Element>(elements: T[]): T[] {
   return elements.sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
-}
-
-/** `{name}` placeholders only. Anything else in the string is left alone. */
-function interpolate(template: string, values: Record<string, number>): string {
-  return template.replace(/\{(\w+)\}/g, (match, key: string) => (key in values ? String(values[key]) : match));
 }

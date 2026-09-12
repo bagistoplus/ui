@@ -27,6 +27,7 @@ Each component is its own entry point, so you ship only what you use.
 | Marquee | `@bagistoplus/ui/marquee` | `ui-marquee`, `ui-marquee-viewport`, `ui-marquee-content`, `ui-marquee-item`, `ui-marquee-edge` |
 | Number Input | `@bagistoplus/ui/number-input` | `ui-number-input`, `ui-number-input-label`, `ui-number-input-control`, `ui-number-input-input`, `ui-number-input-increment-trigger`, `ui-number-input-decrement-trigger`, `ui-number-input-value-text`, `ui-number-input-scrubber` |
 | Before After | `@bagistoplus/ui/before-after` | `ui-before-after`, `ui-before-after-before`, `ui-before-after-after`, `ui-before-after-separator`, `ui-before-after-handle` |
+| Timer | `@bagistoplus/ui/timer` | `ui-timer`, `ui-timer-area`, `ui-timer-control`, `ui-timer-item`, `ui-timer-item-value`, `ui-timer-item-label`, `ui-timer-separator`, `ui-timer-action-trigger` |
 
 The examples below use the accordion. Everything they show about `delegate`, styling and the api applies to every component.
 

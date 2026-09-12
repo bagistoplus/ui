@@ -50,6 +50,10 @@
       "types": "./dist/tabs/index.d.ts",
       "default": "./dist/tabs/index.js"
     },
+    "./timer": {
+      "types": "./dist/timer/index.d.ts",
+      "default": "./dist/timer/index.js"
+    },
     "./ui.css": "./ui.css",
     "./package.json": "./package.json"
   },
@@ -76,6 +80,7 @@
     "@zag-js/popover": "^1.43.3",
     "@zag-js/presence": "^1.43.3",
     "@zag-js/tabs": "^1.43.3",
+    "@zag-js/timer": "^1.43.3",
     "@zag-js/types": "^1.43.3",
     "@zag-js/vanilla": "^1.43.3"
   },

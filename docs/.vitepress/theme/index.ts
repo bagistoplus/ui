@@ -27,6 +27,7 @@ export default {
       import("../../../src/number-input/index");
       import("../../../src/popover/index");
       import("../../../src/tabs/index");
+      import("../../../src/timer/index");
     }
   },
 } satisfies Theme;

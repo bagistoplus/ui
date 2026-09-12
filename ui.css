@@ -331,6 +331,20 @@
     display: block;
   }
 
+  /* Timer. Containers, so a class written on one behaves normally. Zag writes
+     `hidden` on an action trigger by state, and `[hidden] { display: none }`
+     is a USER AGENT rule, so the display rule for it needs the guard. */
+  ui-timer,
+  ui-timer-area,
+  ui-timer-control,
+  ui-timer-item {
+    display: block;
+  }
+
+  ui-timer-action-trigger:not([hidden]):not([delegate]) {
+    display: inline-flex;
+  }
+
   /* The animation Zag's marquee drives but does not write. It sets the
      duration, the delay, the loop count and the travel as custom properties
      on the root, toggles `data-paused` there, and restarts by resetting
@@ -406,6 +420,14 @@
   ui-before-after-after[delegate],
   ui-before-after-separator[delegate],
   ui-before-after-handle[delegate],
+  ui-timer[delegate],
+  ui-timer-area[delegate],
+  ui-timer-control[delegate],
+  ui-timer-item[delegate],
+  ui-timer-item-value[delegate],
+  ui-timer-item-label[delegate],
+  ui-timer-separator[delegate],
+  ui-timer-action-trigger[delegate],
   ui-popover[delegate],
   ui-popover-anchor[delegate],
   ui-popover-trigger[delegate],

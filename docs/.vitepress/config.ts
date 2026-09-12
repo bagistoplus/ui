@@ -56,6 +56,7 @@ export default defineConfig({
           { text: "Number Input", link: "/components/number-input" },
           { text: "Popover", link: "/components/popover" },
           { text: "Tabs", link: "/components/tabs" },
+          { text: "Timer", link: "/components/timer" },
         ],
       },
     ],
