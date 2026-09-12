@@ -194,6 +194,44 @@ The package's answer is `restart()` on the root: stop the machine, build a new o
 
 It is a primitive, not a policy. Core never calls it. A component calls it when it knows its machine is blind to a change, and nowhere else, because a restart drops in-flight state such as a running autoplay or an unfinished drag.
 
+## A derived count, and DOM order as the index
+
+Zag's carousel requires `slideCount` and an `index` on every item, and has no fallback for either. Its React binding gets both from the array it maps over. A custom element has no array; it has children, and the children register with the root.
+
+So the count is the number of registered items, and an item's index is its place among them in document order, computed fresh on every render from one sort of the registered set. Nothing caches an index, which is what makes an insertion in the middle correct: the render after it renumbers everything behind the new item. `slide-count` on the root and `index` on an item override both, for the consumer whose order is not the DOM's.
+
+`hidden` is the one exclusion. An item carrying the attribute is not counted and has no index, because a gallery that hides the slides a selection leaves out would otherwise page onto empty frames. The attribute and not the layout, because the element can read an attribute on every render and cannot read layout.
+
+The same rule numbers indicators inside their group. A thumbnail strip is then the carousel's own pagination with nothing bound.
+
+## The root publishes what CSS cannot compute
+
+The package writes only what Zag emits, with three exceptions, all on the carousel root: `--page`, `--page-count` and `data-autoplay-state`.
+
+The two custom properties exist because a progress bar needs the page and the page count, and a stylesheet cannot get either from Zag's output. Without them every consumer writes the same listener, and one that misses a page-count change without a page change, which is what a resize is. With them the bar is two `calc()` declarations. They sit next to the three custom properties Zag already writes on the same element, so the shape is Zag's own.
+
+The data attribute exists for the same reason Zag puts `data-dragging` on the item group and `data-state` on most roots: so that an element other than the one owning the state can style itself by it. Zag writes `data-pressed` on the autoplay trigger only.
+
+Each extension is documented on the component page as an extension, so the contract stays readable: everything else on every element is Zag's.
+
+## Breakpoints are tiers in the attribute
+
+Zag has no breakpoints. A carousel that shows one slide on a phone and four on a desktop has to be told a different `slidesPerPage` at each width, and the usual answer is a listener in the consumer's framework that rebuilds the machine. That is the third thing on this component a consumer without a framework would have to script, after the progress bar and the indicators, and the rule that settled those two settles this one: the root does it.
+
+The syntax is the attribute's own value with tiers, `slides-per-page="1 640:2 1024:4"`, on the four attributes a layout depends on: `slides-per-page`, `slides-per-move`, `spacing` and `padding`. It reads as `min-width` media queries read, mobile first, because that is the model every stylesheet already uses. The root keeps one `matchMedia` per distinct width, and a change goes through `pushProps()`, the same path an attribute write takes, so Zag re-measures and the indicators re-stamp with nothing rebuilt.
+
+Viewport width, not the element's own width. A `ResizeObserver` would be the more self-contained choice, but a page's stylesheet switches on the viewport, and a carousel that switched on its container would disagree with the classes around it in a narrow column. Lining up with the stylesheet is worth more than self-containment here.
+
+The cost is a syntax Zag does not have, on four attributes, and an attribute that no longer states the machine's current value in one glance. Both are documented on the component page, and a value without tiers is unchanged.
+
+## A part may create elements from a template
+
+Indicators are one per page, and the page count is known only at render time, from `api.pageSnapPoints`, after Zag has measured the scroll container. A framework binding maps over that array. A custom element cannot ask its consumer to.
+
+So `ui-carousel-indicator-group` with a `<template>` child stamps one clone per page, sets `index` on each, and adds or removes clones when the count changes. It is the one part in the package that creates elements, and it does so only when the consumer hands it a template: a group without one leaves its children alone, which is what a thumbnail strip wants. The alternatives were worse. A consumer-side listener misses a count change that arrives without a page change, and a server-rendered set is wrong whenever `slides-per-page` is above one.
+
+A clone connects like any authored indicator and registers with the root, so the group does not render it; it only exists because of the group.
+
 ## An attribute that is also ARIA gets a prefixed name
 
 Two of Zag's dialog props are `role` and `aria-label`, both of which it writes on the content. Neither can be an attribute of the same name on `ui-dialog`: the host has no role, so `role="alertdialog"` on it is read as ARIA in its own right, and assistive technology then sees an alertdialog wrapping a second alertdialog.

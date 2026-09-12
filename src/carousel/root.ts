@@ -1,0 +1,500 @@
+import * as carousel from "@zag-js/carousel";
+import { VanillaMachine } from "@zag-js/vanilla";
+
+import { boolAttribute, findBranded, numberAttribute, readDirection } from "../core/dom";
+import { normalizeProps } from "../core/normalize";
+import { ZagRootElement } from "../core/root";
+import { CAROUSEL_INDICATOR_GROUP, CAROUSEL_ROOT } from "./brands";
+import type { UICarouselIndicator, UICarouselItem } from "./parts";
+
+type Props = Record<string, unknown>;
+
+/** One numbered element: an item, or an indicator inside its group. */
+interface Numbered extends HTMLElement {
+  readonly index: number | null;
+  readonly authoredName: string | undefined;
+}
+
+/**
+ * Zag's carousel is told how many slides it has and which index each one
+ * carries. Neither is a fact the consumer has to repeat: the items are
+ * elements, they register here, and the DOM already orders them. So the count
+ * is the number of registered items that are not `hidden`, and an item's index
+ * is its place among those, unless the consumer writes `slide-count` or
+ * `index` and takes over.
+ *
+ * `hidden` is the one exclusion, because it is the one the element can read
+ * without layout. An item hidden by a class is still a slide.
+ */
+export class UICarousel extends ZagRootElement<carousel.Props, carousel.Api> {
+  static readonly observedAttributes = [
+    "slides-per-page",
+    "slides-per-move",
+    "spacing",
+    "padding",
+    "loop",
+    "allow-mouse-drag",
+    "auto-size",
+    "autoplay",
+    "autoplay-delay",
+    "default-page",
+    "orientation",
+    "snap-type",
+    "in-view-threshold",
+    "slide-count",
+    "dir",
+    "translations-next-trigger",
+    "translations-prev-trigger",
+    "translations-autoplay-start",
+    "translations-autoplay-stop",
+    "translations-item",
+    "translations-indicator",
+    "translations-progress-text",
+  ];
+
+  readonly #items = new Set<UICarouselItem>();
+  readonly #indicators = new Set<UICarouselIndicator>();
+
+  // Built lazily, once per render, and dropped whenever the sets change.
+  #itemOrder: Map<Numbered, number> | undefined;
+  #indicatorOrder: Map<Numbered, number> | undefined;
+
+  #count: number | undefined;
+  #resumePage: number | undefined;
+  #restartFrame = 0;
+
+  // One query per distinct tier width across the four responsive attributes.
+  readonly #queries = new Map<number, MediaQueryList>();
+  readonly #onTierChange = () => this.pushProps();
+
+  get [CAROUSEL_ROOT](): true {
+    return true;
+  }
+
+  protected get componentName(): string {
+    return "carousel";
+  }
+
+  override connectedCallback(): void {
+    super.connectedCallback();
+    this.#watchTiers();
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+
+    queueMicrotask(() => {
+      if (!this.isConnected) {
+        this.#unwatchTiers();
+      }
+    });
+  }
+
+  override attributeChangedCallback(): void {
+    this.#watchTiers();
+    super.attributeChangedCallback();
+  }
+
+  protected createMachine(props: () => carousel.Props): VanillaMachine<any> {
+    return new VanillaMachine(carousel.machine, props);
+  }
+
+  protected connect(machine: VanillaMachine<any>): carousel.Api {
+    return carousel.connect(machine.service, normalizeProps);
+  }
+
+  protected machineProps(): carousel.Props {
+    const slidesPerMove = this.#tier("slides-per-move");
+    const autoplay = boolAttribute(this, "autoplay");
+    const delay = numberAttribute(this, "autoplay-delay");
+
+    return {
+      id: this.scopeKey,
+      ids: {
+        root: this.authoredId(),
+        ...this.authoredIds(),
+        item: (index: number) => this.#itemAt(index)?.authoredName,
+        indicator: (index: number) => this.#indicatorAt(index)?.authoredName,
+      } as carousel.Props["ids"],
+      dir: readDirection(this),
+
+      slideCount: numberAttribute(this, "slide-count") ?? this.#countable().length,
+      slidesPerPage: numberOf(this.#tier("slides-per-page")),
+      slidesPerMove: slidesPerMove === "auto" ? "auto" : numberOf(slidesPerMove),
+      spacing: this.#tier("spacing"),
+      padding: this.#tier("padding"),
+      loop: boolAttribute(this, "loop"),
+      allowMouseDrag: boolAttribute(this, "allow-mouse-drag"),
+      autoSize: boolAttribute(this, "auto-size"),
+      autoplay: autoplay && delay !== undefined ? { delay } : autoplay,
+      defaultPage: this.#resumePage ?? numberAttribute(this, "default-page"),
+      orientation: this.getAttribute("orientation") === "vertical" ? "vertical" : undefined,
+      snapType: this.getAttribute("snap-type") === "proximity" ? "proximity" : undefined,
+      inViewThreshold: numberAttribute(this, "in-view-threshold"),
+      translations: this.#translations(),
+
+      onPageChange: (details) => this.emit("page-change", details),
+      onDragStatusChange: (details) => this.emit("drag-status-change", details),
+      onAutoplayStatusChange: (details) => this.emit("autoplay-status-change", details),
+    };
+  }
+
+  /**
+   * Three things Zag does not write, added next to the three custom properties
+   * it does. `--page` and `--page-count` are what a progress bar needs and
+   * cannot compute from CSS alone, and `data-autoplay-state` lets anything in
+   * the carousel, not only the autoplay trigger, style itself by it.
+   */
+  protected override rootProps(api: carousel.Api): Props {
+    this.#itemOrder = undefined;
+    this.#indicatorOrder = undefined;
+
+    const props = api.getRootProps() as Props;
+    const style = props.style !== null && typeof props.style === "object" ? (props.style as Props) : {};
+
+    return {
+      ...props,
+      style: { ...style, "--page": api.page, "--page-count": api.pageSnapPoints.length },
+      "data-autoplay-state": api.isPlaying ? "playing" : "paused",
+    };
+  }
+
+  protected override afterStart(): void {
+    this.#resumePage = undefined;
+    this.#count = this.#countable().length;
+  }
+
+  registerItem(item: UICarouselItem): void {
+    this.#items.add(item);
+    this.registerChild(item);
+    this.itemsChanged(true);
+  }
+
+  unregisterItem(item: UICarouselItem): void {
+    this.#items.delete(item);
+    this.unregisterChild(item);
+    this.itemsChanged(true);
+  }
+
+  registerIndicator(indicator: UICarouselIndicator): void {
+    this.#indicators.add(indicator);
+    this.registerChild(indicator);
+    this.indicatorsChanged();
+  }
+
+  unregisterIndicator(indicator: UICarouselIndicator): void {
+    this.#indicators.delete(indicator);
+    this.unregisterChild(indicator);
+    this.indicatorsChanged();
+  }
+
+  /**
+   * An item joined, left, or changed what it is counted as.
+   *
+   * A changed count is pushed to the running machine, whose `slideCount`
+   * watcher re-measures the snap points. An item that joined or left after
+   * start also needs the machine rebuilt, because Zag's intersection and
+   * resize observers were bound to the items it found at start and will never
+   * see this one. That is coalesced onto one frame, so a differ swapping ten
+   * items restarts once. A `hidden` toggle needs no restart: the element was
+   * there at start and is already observed.
+   */
+  itemsChanged(structural: boolean): void {
+    this.#itemOrder = undefined;
+
+    if (!this.api) {
+      return;
+    }
+
+    if (structural) {
+      this.#scheduleRestart();
+      return;
+    }
+
+    const count = this.#countable().length;
+
+    if (count !== this.#count) {
+      this.#count = count;
+      this.pushProps();
+      return;
+    }
+
+    this.scheduleRender();
+  }
+
+  indicatorsChanged(): void {
+    this.#indicatorOrder = undefined;
+    this.scheduleRender();
+  }
+
+  /** The index Zag is told for this item, or `undefined` while it is hidden. */
+  indexOf(item: UICarouselItem): number | undefined {
+    if (item.index !== null) {
+      return item.index;
+    }
+
+    this.#itemOrder ??= order(this.#countable());
+
+    return this.#itemOrder.get(item);
+  }
+
+  /**
+   * Numbered among the indicators of its own group, so a stamped clone and an
+   * authored thumbnail count the same way, and a second group starts at zero.
+   */
+  indicatorIndexOf(indicator: UICarouselIndicator): number | undefined {
+    if (indicator.index !== null) {
+      return indicator.index;
+    }
+
+    if (!this.#indicatorOrder) {
+      this.#indicatorOrder = new Map();
+
+      const groups = new Map<Element | null, UICarouselIndicator[]>();
+
+      for (const candidate of this.#indicators) {
+        if (candidate.hidden) {
+          continue;
+        }
+
+        const group = findBranded<Element>(candidate, CAROUSEL_INDICATOR_GROUP);
+        const list = groups.get(group) ?? [];
+
+        list.push(candidate);
+        groups.set(group, list);
+      }
+
+      for (const list of groups.values()) {
+        for (const [element, index] of order(list)) {
+          this.#indicatorOrder.set(element, index);
+        }
+      }
+    }
+
+    return this.#indicatorOrder.get(indicator);
+  }
+
+  #itemAt(index: number): UICarouselItem | undefined {
+    for (const item of this.#items) {
+      if (this.indexOf(item) === index) {
+        return item;
+      }
+    }
+
+    return undefined;
+  }
+
+  #indicatorAt(index: number): UICarouselIndicator | undefined {
+    for (const indicator of this.#indicators) {
+      if (this.indicatorIndexOf(indicator) === index) {
+        return indicator;
+      }
+    }
+
+    return undefined;
+  }
+
+  /** The registered items that are not `hidden`, in document order. */
+  #countable(): UICarouselItem[] {
+    return sorted([...this.#items].filter((item) => !item.hidden));
+  }
+
+  #scheduleRestart(): void {
+    if (this.#restartFrame) {
+      return;
+    }
+
+    this.#restartFrame = requestAnimationFrame(() => {
+      this.#restartFrame = 0;
+
+      if (!this.isConnected) {
+        return;
+      }
+
+      // The page is the one thing worth carrying over. It is read back as
+      // `defaultPage` when the new machine is built.
+      this.#resumePage = this.api?.page;
+      this.restart();
+    });
+  }
+
+  /**
+   * The value of a responsive attribute for the current viewport.
+   *
+   * `slides-per-page="1 640:2 1024:4"` is one value for every width below
+   * 640px, another from 640px, another from 1024px: the same rule as `min-width`
+   * media queries, mobile first. The widest matching tier wins. A value without
+   * tiers is a one-tier value, so `slides-per-page="3"` is unchanged.
+   */
+  #tier(name: string): string | undefined {
+    const tiers = parseTiers(this.getAttribute(name));
+
+    if (tiers.length === 0) {
+      return undefined;
+    }
+
+    let value = tiers[0]!.value;
+
+    for (const tier of tiers) {
+      if (tier.width > 0 && this.#queries.get(tier.width)?.matches) {
+        value = tier.value;
+      }
+    }
+
+    return value;
+  }
+
+  #watchTiers(): void {
+    const widths = new Set<number>();
+
+    for (const name of RESPONSIVE_ATTRIBUTES) {
+      for (const tier of parseTiers(this.getAttribute(name))) {
+        if (tier.width > 0) {
+          widths.add(tier.width);
+        }
+      }
+    }
+
+    for (const [width, query] of this.#queries) {
+      if (!widths.has(width)) {
+        query.removeEventListener("change", this.#onTierChange);
+        this.#queries.delete(width);
+      }
+    }
+
+    for (const width of widths) {
+      if (!this.#queries.has(width)) {
+        const query = window.matchMedia(`(min-width: ${width}px)`);
+
+        query.addEventListener("change", this.#onTierChange);
+        this.#queries.set(width, query);
+      }
+    }
+  }
+
+  #unwatchTiers(): void {
+    for (const query of this.#queries.values()) {
+      query.removeEventListener("change", this.#onTierChange);
+    }
+
+    this.#queries.clear();
+  }
+
+  #translations(): carousel.IntlTranslations | undefined {
+    const read = (name: string) => this.getAttribute(`translations-${name}`);
+    const translations: carousel.IntlTranslations = {};
+
+    const nextTrigger = read("next-trigger");
+    const prevTrigger = read("prev-trigger");
+    const autoplayStart = read("autoplay-start");
+    const autoplayStop = read("autoplay-stop");
+    const item = read("item");
+    const indicator = read("indicator");
+    const progressText = read("progress-text");
+
+    if (nextTrigger) {
+      translations.nextTrigger = nextTrigger;
+    }
+
+    if (prevTrigger) {
+      translations.prevTrigger = prevTrigger;
+    }
+
+    if (autoplayStart) {
+      translations.autoplayStart = autoplayStart;
+    }
+
+    if (autoplayStop) {
+      translations.autoplayStop = autoplayStop;
+    }
+
+    // Indices are one based here: these strings are read to people.
+    if (item) {
+      translations.item = (index, count) => interpolate(item, { index: index + 1, count });
+    }
+
+    if (indicator) {
+      translations.indicator = (index) => interpolate(indicator, { index: index + 1 });
+    }
+
+    if (progressText) {
+      translations.progressText = ({ page, totalPages }) => interpolate(progressText, { page, totalPages });
+    }
+
+    return Object.keys(translations).length > 0 ? translations : undefined;
+  }
+}
+
+const RESPONSIVE_ATTRIBUTES = ["slides-per-page", "slides-per-move", "spacing", "padding"] as const;
+
+interface Tier {
+  width: number;
+  value: string;
+}
+
+/**
+ * `"1 640:2 1024:4"` becomes three tiers, the first at width 0. A token
+ * without a width is the base; a token with an unparseable width is dropped.
+ */
+function parseTiers(value: string | null): Tier[] {
+  if (value == null) {
+    return [];
+  }
+
+  const tiers: Tier[] = [];
+
+  for (const token of value.trim().split(/\s+/)) {
+    if (token === "") {
+      continue;
+    }
+
+    const colon = token.indexOf(":");
+
+    if (colon === -1) {
+      tiers.push({ width: 0, value: token });
+      continue;
+    }
+
+    const width = Number(token.slice(0, colon));
+
+    if (Number.isFinite(width)) {
+      tiers.push({ width, value: token.slice(colon + 1) });
+    }
+  }
+
+  return tiers.sort((a, b) => a.width - b.width);
+}
+
+function numberOf(value: string | undefined): number | undefined {
+  if (value == null || value === "") {
+    return undefined;
+  }
+
+  const parsed = Number(value);
+
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+/** Numbers the elements without an explicit `index`, in the order given. */
+function order<T extends Numbered>(elements: T[]): Map<T, number> {
+  const map = new Map<T, number>();
+  let next = 0;
+
+  for (const element of elements) {
+    if (element.index === null) {
+      map.set(element, next++);
+    }
+  }
+
+  return map;
+}
+
+/** Document order, without a tag name in sight. */
+function sorted<T extends Element>(elements: T[]): T[] {
+  return elements.sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
+}
+
+/** `{name}` placeholders only. Anything else in the string is left alone. */
+function interpolate(template: string, values: Record<string, number>): string {
+  return template.replace(/\{(\w+)\}/g, (match, key: string) => (key in values ? String(values[key]) : match));
+}

@@ -14,6 +14,10 @@
       "types": "./dist/accordion/index.d.ts",
       "default": "./dist/accordion/index.js"
     },
+    "./carousel": {
+      "types": "./dist/carousel/index.d.ts",
+      "default": "./dist/carousel/index.js"
+    },
     "./dialog": {
       "types": "./dist/dialog/index.d.ts",
       "default": "./dist/dialog/index.js"
@@ -48,6 +52,7 @@
   },
   "dependencies": {
     "@zag-js/accordion": "^1.43.3",
+    "@zag-js/carousel": "^1.43.3",
     "@zag-js/dialog": "^1.43.3",
     "@zag-js/menu": "^1.43.3",
     "@zag-js/navigation-menu": "^1.43.3",

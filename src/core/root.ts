@@ -102,8 +102,7 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
       return;
     }
 
-    this.#machine.updateProps(() => this.machineProps());
-    this.scheduleRender();
+    this.pushProps();
   }
 
   registerId(part: string, id: string, value?: string): void {
@@ -119,8 +118,7 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
     this.#partIds.set(part, id);
 
     // The machine may already be running: a part can connect at any time.
-    this.#machine?.updateProps(() => this.machineProps());
-    this.scheduleRender();
+    this.pushProps();
   }
 
   registerChild(child: Renderable<TApi>): void {
@@ -288,6 +286,17 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
     }
 
     this.#stop();
+    this.scheduleRender();
+  }
+
+  /**
+   * Re-reads `machineProps()` into the running machine and renders. For a
+   * root whose props come from somewhere other than its attributes: the
+   * carousel counts its items, and a count changes without any attribute
+   * doing so.
+   */
+  protected pushProps(): void {
+    this.#machine?.updateProps(() => this.machineProps());
     this.scheduleRender();
   }
 
