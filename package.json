@@ -22,6 +22,10 @@
       "types": "./dist/dialog/index.d.ts",
       "default": "./dist/dialog/index.js"
     },
+    "./marquee": {
+      "types": "./dist/marquee/index.d.ts",
+      "default": "./dist/marquee/index.js"
+    },
     "./menu": {
       "types": "./dist/menu/index.d.ts",
       "default": "./dist/menu/index.js"
@@ -54,6 +58,7 @@
     "@zag-js/accordion": "^1.43.3",
     "@zag-js/carousel": "^1.43.3",
     "@zag-js/dialog": "^1.43.3",
+    "@zag-js/marquee": "^1.43.3",
     "@zag-js/menu": "^1.43.3",
     "@zag-js/navigation-menu": "^1.43.3",
     "@zag-js/popover": "^1.43.3",

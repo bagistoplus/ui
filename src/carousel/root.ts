@@ -4,6 +4,7 @@ import { VanillaMachine } from "@zag-js/vanilla";
 import { boolAttribute, findBranded, numberAttribute, readDirection } from "../core/dom";
 import { normalizeProps } from "../core/normalize";
 import { ZagRootElement } from "../core/root";
+import { Tiers, numberOf } from "../core/tiers";
 import { CAROUSEL_INDICATOR_GROUP, CAROUSEL_ROOT } from "./brands";
 import type { UICarouselIndicator, UICarouselItem } from "./parts";
 
@@ -63,9 +64,7 @@ export class UICarousel extends ZagRootElement<carousel.Props, carousel.Api> {
   #resumePage: number | undefined;
   #restartFrame = 0;
 
-  // One query per distinct tier width across the four responsive attributes.
-  readonly #queries = new Map<number, MediaQueryList>();
-  readonly #onTierChange = () => this.pushProps();
+  readonly #tiers = new Tiers(this, RESPONSIVE_ATTRIBUTES, () => this.pushProps());
 
   get [CAROUSEL_ROOT](): true {
     return true;
@@ -77,7 +76,7 @@ export class UICarousel extends ZagRootElement<carousel.Props, carousel.Api> {
 
   override connectedCallback(): void {
     super.connectedCallback();
-    this.#watchTiers();
+    this.#tiers.watch();
   }
 
   override disconnectedCallback(): void {
@@ -85,13 +84,13 @@ export class UICarousel extends ZagRootElement<carousel.Props, carousel.Api> {
 
     queueMicrotask(() => {
       if (!this.isConnected) {
-        this.#unwatchTiers();
+        this.#tiers.unwatch();
       }
     });
   }
 
   override attributeChangedCallback(): void {
-    this.#watchTiers();
+    this.#tiers.watch();
     super.attributeChangedCallback();
   }
 
@@ -104,7 +103,7 @@ export class UICarousel extends ZagRootElement<carousel.Props, carousel.Api> {
   }
 
   protected machineProps(): carousel.Props {
-    const slidesPerMove = this.#tier("slides-per-move");
+    const slidesPerMove = this.#tiers.value("slides-per-move");
     const autoplay = boolAttribute(this, "autoplay");
     const delay = numberAttribute(this, "autoplay-delay");
 
@@ -119,10 +118,10 @@ export class UICarousel extends ZagRootElement<carousel.Props, carousel.Api> {
       dir: readDirection(this),
 
       slideCount: numberAttribute(this, "slide-count") ?? this.#countable().length,
-      slidesPerPage: numberOf(this.#tier("slides-per-page")),
+      slidesPerPage: numberOf(this.#tiers.value("slides-per-page")),
       slidesPerMove: slidesPerMove === "auto" ? "auto" : numberOf(slidesPerMove),
-      spacing: this.#tier("spacing"),
-      padding: this.#tier("padding"),
+      spacing: this.#tiers.value("spacing"),
+      padding: this.#tiers.value("padding"),
       loop: boolAttribute(this, "loop"),
       allowMouseDrag: boolAttribute(this, "allow-mouse-drag"),
       autoSize: boolAttribute(this, "auto-size"),
@@ -318,68 +317,6 @@ export class UICarousel extends ZagRootElement<carousel.Props, carousel.Api> {
     });
   }
 
-  /**
-   * The value of a responsive attribute for the current viewport.
-   *
-   * `slides-per-page="1 640:2 1024:4"` is one value for every width below
-   * 640px, another from 640px, another from 1024px: the same rule as `min-width`
-   * media queries, mobile first. The widest matching tier wins. A value without
-   * tiers is a one-tier value, so `slides-per-page="3"` is unchanged.
-   */
-  #tier(name: string): string | undefined {
-    const tiers = parseTiers(this.getAttribute(name));
-
-    if (tiers.length === 0) {
-      return undefined;
-    }
-
-    let value = tiers[0]!.value;
-
-    for (const tier of tiers) {
-      if (tier.width > 0 && this.#queries.get(tier.width)?.matches) {
-        value = tier.value;
-      }
-    }
-
-    return value;
-  }
-
-  #watchTiers(): void {
-    const widths = new Set<number>();
-
-    for (const name of RESPONSIVE_ATTRIBUTES) {
-      for (const tier of parseTiers(this.getAttribute(name))) {
-        if (tier.width > 0) {
-          widths.add(tier.width);
-        }
-      }
-    }
-
-    for (const [width, query] of this.#queries) {
-      if (!widths.has(width)) {
-        query.removeEventListener("change", this.#onTierChange);
-        this.#queries.delete(width);
-      }
-    }
-
-    for (const width of widths) {
-      if (!this.#queries.has(width)) {
-        const query = window.matchMedia(`(min-width: ${width}px)`);
-
-        query.addEventListener("change", this.#onTierChange);
-        this.#queries.set(width, query);
-      }
-    }
-  }
-
-  #unwatchTiers(): void {
-    for (const query of this.#queries.values()) {
-      query.removeEventListener("change", this.#onTierChange);
-    }
-
-    this.#queries.clear();
-  }
-
   #translations(): carousel.IntlTranslations | undefined {
     const read = (name: string) => this.getAttribute(`translations-${name}`);
     const translations: carousel.IntlTranslations = {};
@@ -426,54 +363,6 @@ export class UICarousel extends ZagRootElement<carousel.Props, carousel.Api> {
 }
 
 const RESPONSIVE_ATTRIBUTES = ["slides-per-page", "slides-per-move", "spacing", "padding"] as const;
-
-interface Tier {
-  width: number;
-  value: string;
-}
-
-/**
- * `"1 640:2 1024:4"` becomes three tiers, the first at width 0. A token
- * without a width is the base; a token with an unparseable width is dropped.
- */
-function parseTiers(value: string | null): Tier[] {
-  if (value == null) {
-    return [];
-  }
-
-  const tiers: Tier[] = [];
-
-  for (const token of value.trim().split(/\s+/)) {
-    if (token === "") {
-      continue;
-    }
-
-    const colon = token.indexOf(":");
-
-    if (colon === -1) {
-      tiers.push({ width: 0, value: token });
-      continue;
-    }
-
-    const width = Number(token.slice(0, colon));
-
-    if (Number.isFinite(width)) {
-      tiers.push({ width, value: token.slice(colon + 1) });
-    }
-  }
-
-  return tiers.sort((a, b) => a.width - b.width);
-}
-
-function numberOf(value: string | undefined): number | undefined {
-  if (value == null || value === "") {
-    return undefined;
-  }
-
-  const parsed = Number(value);
-
-  return Number.isFinite(parsed) ? parsed : undefined;
-}
 
 /** Numbers the elements without an explicit `index`, in the order given. */
 function order<T extends Numbered>(elements: T[]): Map<T, number> {

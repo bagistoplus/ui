@@ -24,6 +24,7 @@ Each component is its own entry point, so you ship only what you use.
 | Menu | `@bagistoplus/ui/menu` | `ui-menu`, `ui-menu-trigger`, `ui-menu-indicator`, `ui-menu-positioner`, `ui-menu-content`, `ui-menu-arrow`, `ui-menu-arrow-tip`, `ui-menu-item`, `ui-menu-item-text`, `ui-menu-item-indicator`, `ui-menu-item-group`, `ui-menu-item-group-label`, `ui-menu-separator` |
 | Navigation Menu | `@bagistoplus/ui/navigation-menu` | `ui-navigation-menu`, `ui-navigation-menu-list`, `ui-navigation-menu-item`, `ui-navigation-menu-trigger`, `ui-navigation-menu-trigger-proxy`, `ui-navigation-menu-viewport-proxy`, `ui-navigation-menu-item-indicator`, `ui-navigation-menu-link`, `ui-navigation-menu-content`, `ui-navigation-menu-viewport-positioner`, `ui-navigation-menu-viewport`, `ui-navigation-menu-indicator`, `ui-navigation-menu-arrow` |
 | Carousel | `@bagistoplus/ui/carousel` | `ui-carousel`, `ui-carousel-item-group`, `ui-carousel-item`, `ui-carousel-control`, `ui-carousel-prev-trigger`, `ui-carousel-next-trigger`, `ui-carousel-autoplay-trigger`, `ui-carousel-indicator-group`, `ui-carousel-indicator`, `ui-carousel-progress-text` |
+| Marquee | `@bagistoplus/ui/marquee` | `ui-marquee`, `ui-marquee-viewport`, `ui-marquee-content`, `ui-marquee-item`, `ui-marquee-edge` |
 
 The examples below use the accordion. Everything they show about `delegate`, styling and the api applies to every component.
 

@@ -14,7 +14,7 @@ attributes  →  machine props  →  connect()  →  applyProps()  →  DOM
 
 ## `src/core/`
 
-Five files, none of which know about a particular component.
+Nine files, none of which know about a particular component.
 
 ### `root.ts`
 
@@ -41,7 +41,11 @@ One hook runs after `start()`: `afterStart(api)`. It exists because `send` on an
 
 One method undoes it: `restart()` stops the machine and builds a new one on the next render, keeping the children, the authored ids and the scope key. It exists for a machine whose effects bind to elements once, at start, and whose element set has changed. The carousel calls it when an item is added or removed after start, because Zag bound its observers to the items it found at start. Nothing in core calls it.
 
-`pushProps()` re-reads `machineProps()` into the running machine and renders. `attributeChangedCallback` and `registerId` go through it, and so does a root whose props come from somewhere other than its attributes, such as the carousel's derived slide count.
+`pushProps()` re-reads `machineProps()` into the running machine and renders. `attributeChangedCallback` and `registerId` go through it, and so does a root whose props come from somewhere other than its attributes, such as the carousel's derived slide count. `updateProps` notifies the subscription, so a push also reconnects the api; the marquee's public `refresh()` is that, for a value Zag computes at connect and changes silently afterwards.
+
+### `tiers.ts`
+
+`Tiers`, the responsive attribute reader: `slides-per-page="1 640:2 1024:4"` is a base and two tiers on viewport `min-width` queries, mobile first. A root constructs one with the names of its responsive attributes and its `pushProps`, calls `watch()` on connect and on every attribute change, `unwatch()` on a real disconnect, and `value(name)` inside `machineProps()`. The carousel and the marquee use it; `parseTiers` and `numberOf` are exported for a root that needs the pieces.
 
 **Registrations are coalesced onto one animation frame; a machine tick renders at once.** Mounting registers every child and every part separately, so rendering per registration would be O(children × parts). Measured on 50 items and 150 parts, coalescing turns roughly 200 registrations into 2 renders. A notification from the running machine is different: Zag's effects schedule a frame from inside the transition and some read the DOM when it runs, the dialog's focus trap among them, so the render they depend on happens synchronously inside the subscription rather than a frame later.
 

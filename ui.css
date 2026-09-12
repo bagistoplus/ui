@@ -5,8 +5,9 @@
  * rules exist to stop a panel painting open before its element upgrades, and a
  * stylesheet adopted on import arrives after that paint has already happened.
  *
- * Nothing here is decorative. Every rule is either a display default the
- * browser gets wrong for custom elements, or a pre-upgrade guard.
+ * Nothing here is decorative. Every rule is a display default the browser
+ * gets wrong for custom elements, a pre-upgrade guard, or an animation a
+ * machine drives through custom properties but cannot write itself.
  */
 
 /*
@@ -298,6 +299,65 @@
   /* No pre-upgrade guard. Nothing in a carousel starts hidden, and the layout
      before upgrade is whatever inline grid style the consumer rendered. */
 
+  /* Marquee. Zag writes the flex row, the clipping and the containment into
+     the root's style and the flex row into the viewport and each content, and
+     measures the root and the first content, so all of them are real boxes.
+     The same declarations here keep the frame before upgrade from stacking
+     every item in a column. */
+  ui-marquee {
+    display: flex;
+    position: relative;
+    overflow: hidden;
+  }
+
+  ui-marquee-viewport,
+  ui-marquee-content {
+    display: flex;
+  }
+
+  ui-marquee-content {
+    flex-shrink: 0;
+  }
+
+  ui-marquee-item,
+  ui-marquee-edge {
+    display: block;
+  }
+
+  /* The animation Zag's marquee drives but does not write. It sets the
+     duration, the delay, the loop count and the travel as custom properties
+     on the root, toggles `data-paused` there, and restarts by resetting
+     `style.animation` on every content, which only works when a stylesheet
+     rule owns the animation. On `data-part`, so a delegated content is
+     covered too. */
+  [data-scope="marquee"][data-part="content"][data-orientation="horizontal"] {
+    animation: ui-marquee-x var(--marquee-duration, 40s) linear var(--marquee-delay, 0s)
+      var(--marquee-loop-count, infinite);
+  }
+
+  [data-scope="marquee"][data-part="content"][data-orientation="vertical"] {
+    animation: ui-marquee-y var(--marquee-duration, 40s) linear var(--marquee-delay, 0s)
+      var(--marquee-loop-count, infinite);
+  }
+
+  [data-scope="marquee"][data-part="content"][data-reverse] {
+    animation-direction: reverse;
+  }
+
+  [data-scope="marquee"][data-part="root"][data-paused] [data-part="content"] {
+    animation-play-state: paused;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-scope="marquee"][data-part="content"] {
+      animation: none;
+    }
+
+    [data-scope="marquee"][data-part="content"][data-clone] {
+      display: none;
+    }
+  }
+
   /* `delegate` hands Zag's props to the single element child, so the host must
      cost no layout of its own. Last in the layer, and every rule above it that
      could match a delegating host carries `:not([delegate])`. */
@@ -316,6 +376,11 @@
   ui-carousel-indicator-group[delegate],
   ui-carousel-indicator[delegate],
   ui-carousel-progress-text[delegate],
+  ui-marquee[delegate],
+  ui-marquee-viewport[delegate],
+  ui-marquee-content[delegate],
+  ui-marquee-item[delegate],
+  ui-marquee-edge[delegate],
   ui-tabs[delegate],
   ui-tabs-list[delegate],
   ui-tabs-trigger[delegate],
@@ -367,5 +432,25 @@
   ui-navigation-menu-indicator[delegate],
   ui-navigation-menu-arrow[delegate] {
     display: contents;
+  }
+}
+
+@keyframes ui-marquee-x {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(var(--marquee-translate, -100%));
+  }
+}
+
+@keyframes ui-marquee-y {
+  from {
+    transform: translateY(0);
+  }
+
+  to {
+    transform: translateY(var(--marquee-translate, -100%));
   }
 }

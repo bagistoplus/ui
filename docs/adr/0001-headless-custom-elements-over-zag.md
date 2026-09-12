@@ -206,11 +206,13 @@ The same rule numbers indicators inside their group. A thumbnail strip is then t
 
 ## The root publishes what CSS cannot compute
 
-The package writes only what Zag emits, with three exceptions, all on the carousel root: `--page`, `--page-count` and `data-autoplay-state`.
+The package writes only what Zag emits, with three exceptions on the carousel root, `--page`, `--page-count` and `data-autoplay-state`, and one on a marquee copy, `inert`.
 
 The two custom properties exist because a progress bar needs the page and the page count, and a stylesheet cannot get either from Zag's output. Without them every consumer writes the same listener, and one that misses a page-count change without a page change, which is what a resize is. With them the bar is two `calc()` declarations. They sit next to the three custom properties Zag already writes on the same element, so the shape is Zag's own.
 
 The data attribute exists for the same reason Zag puts `data-dragging` on the item group and `data-state` on most roots: so that an element other than the one owning the state can style itself by it. Zag writes `data-pressed` on the autoplay trigger only.
+
+The marquee's `inert` exists because Zag hides a copy from assistive technology with `aria-hidden` and leaves it in the tab order, so a link in a strip with four copies would be five tab stops. Hit testing skips an inert subtree and lands on the viewport beneath, so pause on hover still works over a copy; the suite proves it.
 
 Each extension is documented on the component page as an extension, so the contract stays readable: everything else on every element is Zag's.
 
@@ -224,6 +226,8 @@ Viewport width, not the element's own width. A `ResizeObserver` would be the mor
 
 The cost is a syntax Zag does not have, on four attributes, and an attribute that no longer states the machine's current value in one glance. Both are documented on the component page, and a value without tiers is unchanged.
 
+The parsing and the queries live in `src/core/tiers.ts`, because the marquee reads `speed`, `spacing` and `side` the same way. A root names its responsive attributes and hands the helper its `pushProps`.
+
 ## A part may create elements from a template
 
 Indicators are one per page, and the page count is known only at render time, from `api.pageSnapPoints`, after Zag has measured the scroll container. A framework binding maps over that array. A custom element cannot ask its consumer to.
@@ -231,6 +235,14 @@ Indicators are one per page, and the page count is known only at render time, fr
 So `ui-carousel-indicator-group` with a `<template>` child stamps one clone per page, sets `index` on each, and adds or removes clones when the count changes. It is the one part in the package that creates elements, and it does so only when the consumer hands it a template: a group without one leaves its children alone, which is what a thumbnail strip wants. The alternatives were worse. A consumer-side listener misses a count change that arrives without a page change, and a server-rendered set is wrong whenever `slides-per-page` is above one.
 
 A clone connects like any authored indicator and registers with the root, so the group does not render it; it only exists because of the group.
+
+## A part may clone its consumer's markup
+
+Zag's marquee asks for `multiplier + 1` contents, the first real and the rest copies, and the multiplier is measured from the root's width at start and on every resize. A framework binding maps over the number. A template, as the indicators use, would not do: the copies are the consumer's own children, which an editor edits in place, and a template goes stale the moment the source changes.
+
+So `ui-marquee-viewport` treats its first content as the source and clones it, children and all, once per extra count. It strips every `id` inside a copy, because Zag looks elements up by id, and names the copy after the source when the source is named. It watches the source with a `MutationObserver` and rebuilds the copies when the children change, and watches the sizes with a `ResizeObserver` because Zag's count is computed once per connect and a `refs` write notifies nobody; the root reconnects two frames later, after Zag's own observer has written the dimensions.
+
+The copies are cloned live DOM, and a consumer may carry things in the source that must not be copied: an editor's block identity, a directive that must not run twice. The package cannot know which, so it emits `ui-marquee:clone` with the detached copy before appending it. `dispatchEvent` is synchronous, so a listener strips what it wants and the copy enters the document already clean. Nothing about any consumer is in the package; the hook is the whole contract.
 
 ## An attribute that is also ARIA gets a prefixed name
 
@@ -253,7 +265,9 @@ ui-accordion:not(:defined) ui-accordion-item-content { display: none }
 [delegate] { display: contents }
 ```
 
-The `:not(:defined)` rules are the reason this is a file rather than a stylesheet the package adopts on import. An adopted sheet runs after the bundle loads, by which point the browser has already painted every panel open. The animation recipe lives in the same file as a documented optional block, never as a default.
+The `:not(:defined)` rules are the reason this is a file rather than a stylesheet the package adopts on import. An adopted sheet runs after the bundle loads, by which point the browser has already painted every panel open. The accordion's animation recipe lives in the same file as a documented optional block, never as a default.
+
+One animation is a default: the marquee's. Zag's marquee writes the duration, the delay, the loop count and the travel as custom properties on the root, toggles `data-paused` there, and restarts by resetting `style.animation` on every content, all of which assumes a stylesheet rule owns the animation. Without one the component measures, copies and pauses, and nothing moves. So `ui.css` carries the keyframes and the `animation` on `[data-scope="marquee"][data-part="content"]`, inside the layer like everything else, so a consumer's own rule wins. The header of the file names the category: an animation a machine drives through custom properties but cannot write itself.
 
 Every rule in it sits inside `@layer ui`. Unlayered CSS beats every layer, so an unlayered `display: block` on `ui-accordion` would beat a Tailwind `flex` utility and make the package unstylable by the very means it advertises. The layer inverts that, at the price of a documented ordering requirement: load `ui.css` before the consumer's own stylesheet, because layer precedence follows first appearance.
 
