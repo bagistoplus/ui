@@ -497,3 +497,42 @@ describe("identity", () => {
     expect(panelA!.id).toBe("panel-a");
   });
 });
+
+describe("restart", () => {
+  it("builds a new machine, keeps the children and the authored ids, and keeps working", async () => {
+    const host = await mount(`
+      <ui-tabs default-value="a">
+        <ui-tabs-list>
+          <ui-tabs-trigger delegate value="a"><button id="mine">a</button></ui-tabs-trigger>
+          ${tab("b")}
+        </ui-tabs-list>
+        ${panel("a")}${panel("b")}
+      </ui-tabs>
+    `);
+    const tabs = root(host);
+    const before = tabs.api;
+    const changes: string[] = [];
+
+    tabs.addEventListener("ui-tabs:value-change", (event) => {
+      changes.push((event as CustomEvent<{ value: string }>).detail.value);
+    });
+
+    (tabs as unknown as { restart(): void }).restart();
+    await frames();
+
+    const first = triggers(host)[0]!;
+    const second = triggers(host)[1]!;
+
+    expect(tabs.api).not.toBe(before);
+    expect(tabs.api).toBeDefined();
+    expect(first.id).toBe("mine");
+    expect(first.getAttribute("role")).toBe("tab");
+    expect(panels(host)[0]!.hidden).toBe(false);
+
+    await userEvent.click(second);
+    await frames();
+
+    expect(changes).toEqual(["b"]);
+    expect(second.getAttribute("aria-selected")).toBe("true");
+  });
+});

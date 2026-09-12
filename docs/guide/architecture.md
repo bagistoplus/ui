@@ -39,6 +39,8 @@ Every other Zag binding is already ordered this way. React calls `connect()` dur
 
 One hook runs after `start()`: `afterStart(api)`. It exists because `send` on an unstarted machine is a no-op, and linking a submenu to its parent is two sends. Nothing else uses it.
 
+One method undoes it: `restart()` stops the machine and builds a new one on the next render, keeping the children, the authored ids and the scope key. It exists for a machine whose effects bind to elements once, at start, and whose element set has changed. The carousel calls it when an item is added or removed after start. Nothing in core calls it.
+
 **Registrations are coalesced onto one animation frame; a machine tick renders at once.** Mounting registers every child and every part separately, so rendering per registration would be O(children × parts). Measured on 50 items and 150 parts, coalescing turns roughly 200 registrations into 2 renders. A notification from the running machine is different: Zag's effects schedule a frame from inside the transition and some read the DOM when it runs, the dialog's focus trap among them, so the render they depend on happens synchronously inside the subscription rather than a frame later.
 
 **A disconnect is not a removal.** A DOM differ moves nodes, so `disconnectedCallback` defers one microtask and bails if the element is connected again by then. Machine creation returns early when one already exists, so state is never rebuilt on reconnect.

@@ -186,6 +186,14 @@ Which menu is the parent is a fact the DOM already states. A `ui-menu` whose nea
 
 Two things follow from one element being described by two machines. The submenu's trigger needs the parent's item props merged in, which Zag does in `getTriggerItemProps(childApi)`, a **parent** api call. There is no `ui-menu-trigger-item` element for it: Zag already keys the part name on `isSubmenu` inside `getTriggerProps`, and the trigger makes the same decision one level up, where the parent api is reachable through its owner. And that element has to re-render on the parent's ticks as well as the child's, since the parent's highlight lands on it. So a submenu registers with its parent as a renderable, and the parent's render pass re-renders the whole submenu with its own api. Zag has no `removeChild`; a stopped submenu stays in the parent's children and every send to it is a no-op.
 
+## A root may restart its machine
+
+Some of Zag's effects bind to elements once, when the machine starts. The carousel's `trackSlideIntersections` and `trackSlideResize` observe the item elements they find at that moment and never look again, so an item connected later receives no `data-inview`, keeps `aria-hidden="true"`, and its resize refreshes nothing. `updateProps` cannot help: the props did not change, the elements did.
+
+The package's answer is `restart()` on the root: stop the machine, build a new one on the next render, start it at the end of that render as on the first frame. What the element has learned survives, because none of it lives in the machine: the registered children, the authored ids, the scope key, and the machine props read from attributes. A root that restarts also passes what it wants to keep from the old machine as props of the new one; the carousel hands over the page as `defaultPage`.
+
+It is a primitive, not a policy. Core never calls it. A component calls it when it knows its machine is blind to a change, and nowhere else, because a restart drops in-flight state such as a running autoplay or an unfinished drag.
+
 ## An attribute that is also ARIA gets a prefixed name
 
 Two of Zag's dialog props are `role` and `aria-label`, both of which it writes on the content. Neither can be an attribute of the same name on `ui-dialog`: the host has no role, so `role="alertdialog"` on it is read as ARIA in its own right, and assistive technology then sees an alertdialog wrapping a second alertdialog.

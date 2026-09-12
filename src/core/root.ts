@@ -272,6 +272,25 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
    */
   protected afterStart(_api: TApi): void {}
 
+  /**
+   * Stops the machine and builds a new one on the next render.
+   *
+   * For a machine whose effects bind to elements once, at start. Zag's carousel
+   * subscribes its intersection and resize observers to the items it finds
+   * then, and an item connected later is never observed. A restart is the only
+   * way such a machine sees a changed element set. Everything the element has
+   * learned stays: the children, the authored ids and the scope key, so the new
+   * machine is named and rendered like the first, and `afterStart` runs again.
+   */
+  protected restart(): void {
+    if (!this.#machine) {
+      return;
+    }
+
+    this.#stop();
+    this.scheduleRender();
+  }
+
   protected emit(name: string, detail: unknown): void {
     this.dispatchEvent(new CustomEvent(`ui-${this.componentName}:${name}`, { detail, bubbles: true }));
   }
