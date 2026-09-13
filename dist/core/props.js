@@ -1,0 +1,153 @@
+const applied = new WeakMap();
+const PROPERTIES = new Set(["value", "checked", "selected", "defaultValue", "defaultChecked"]);
+export function applyProps(el, props, scope) {
+    let scopes = applied.get(el);
+    if (!scopes) {
+        scopes = new Map();
+        applied.set(el, scopes);
+    }
+    let record = scopes.get(scope);
+    if (!record) {
+        record = { attributes: new Set(), styles: new Set(), listeners: new Map(), props };
+        scopes.set(scope, record);
+    }
+    record.props = props;
+    const style = props.style;
+    const isStyleObject = style !== null && typeof style === "object";
+    const next = new Set();
+    for (const key in props) {
+        if (key.startsWith("on")) {
+            bind(el, record, key);
+            continue;
+        }
+        if (key === "children") {
+            continue;
+        }
+        // Handled below, one declaration at a time, so it never becomes an
+        // attribute and never joins the attribute removal set.
+        if (key === "style" && isStyleObject) {
+            continue;
+        }
+        write(el, key, props[key]);
+        next.add(key);
+    }
+    for (const name of record.attributes) {
+        if (!next.has(name)) {
+            el.removeAttribute(name.toLowerCase());
+        }
+    }
+    record.attributes = next;
+    record.styles = applyStyle(el, style, record.styles);
+}
+export function releaseProps(el, scope) {
+    const record = applied.get(el)?.get(scope);
+    if (!record) {
+        return;
+    }
+    for (const [type, listener] of record.listeners) {
+        el.removeEventListener(type, listener);
+    }
+    record.listeners.clear();
+    applied.get(el)?.delete(scope);
+}
+/**
+ * One stable listener per event, dispatching to whatever the latest render put
+ * in props. Zag hands back fresh closures on every connect, so binding those
+ * directly would mean removing and adding a listener on every render.
+ */
+function bind(el, record, key) {
+    const type = key.slice(2).toLowerCase();
+    if (record.listeners.has(type)) {
+        return;
+    }
+    const listener = (event) => {
+        const handler = record.props[key];
+        if (typeof handler === "function") {
+            handler(event);
+        }
+    };
+    record.listeners.set(type, listener);
+    el.addEventListener(type, listener);
+}
+/**
+ * Declarations go on one at a time, never through the `style` attribute.
+ *
+ * A Zag style object is sometimes only a template. A positioner's `transform`
+ * reads `translate3d(var(--x), var(--y), 0)` and `@zag-js/popper` writes `--x`
+ * and `--y` itself with `setProperty`. Replacing the whole attribute would
+ * delete every declaration we do not own, so each one is compared, set and
+ * removed on its own. A consumer's own inline style survives for the same
+ * reason.
+ *
+ * Live DOM comparison is unchanged, only finer: a stripped `style` attribute
+ * leaves every `getPropertyValue` empty, so the next render writes them all
+ * back. The values we did not write stay gone, which is what `api.reposition()`
+ * is for.
+ */
+function applyStyle(el, style, previous) {
+    // A string already replaced the whole attribute, so nothing we set before it
+    // is left to remove.
+    if (typeof style === "string") {
+        return new Set();
+    }
+    const next = new Set();
+    if (style !== null && typeof style === "object") {
+        for (const [key, value] of Object.entries(style)) {
+            if (value == null || value === "") {
+                continue;
+            }
+            const name = cssName(key);
+            const text = String(value);
+            next.add(name);
+            if (el.style.getPropertyValue(name) !== text) {
+                el.style.setProperty(name, text);
+            }
+        }
+    }
+    for (const name of previous) {
+        if (!next.has(name)) {
+            el.style.removeProperty(name);
+        }
+    }
+    return next;
+}
+/** Custom properties pass through untouched; everything else is camelCase. */
+function cssName(key) {
+    return key.startsWith("--") ? key : key.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
+}
+function write(el, key, value) {
+    if (key === "class") {
+        if (el.className !== value) {
+            el.className = value ?? "";
+        }
+        return;
+    }
+    if (PROPERTIES.has(key)) {
+        const node = el;
+        if (node[key] !== value) {
+            node[key] = value ?? "";
+        }
+        return;
+    }
+    const name = key.toLowerCase();
+    // Zag sends aria-expanded and friends as booleans, but they are enumerated
+    // attributes whose value is the string, not attributes whose presence is the
+    // value.
+    if (typeof value === "boolean" && !name.startsWith("aria-")) {
+        if (el.hasAttribute(name) !== value) {
+            el.toggleAttribute(name, value);
+        }
+        return;
+    }
+    if (value == null) {
+        if (el.hasAttribute(name)) {
+            el.removeAttribute(name);
+        }
+        return;
+    }
+    const next = String(value);
+    if (el.getAttribute(name) !== next) {
+        el.setAttribute(name, next);
+    }
+}
+//# sourceMappingURL=props.js.map
