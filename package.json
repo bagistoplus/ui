@@ -3,6 +3,17 @@
   "version": "0.0.0",
   "description": "Headless custom elements built on Zag. No shadow DOM, no framework.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bagistoplus/ui.git"
+  },
+  "homepage": "https://github.com/bagistoplus/ui#readme",
+  "bugs": {
+    "url": "https://github.com/bagistoplus/ui/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
   "type": "module",
   "sideEffects": true,
   "files": [
