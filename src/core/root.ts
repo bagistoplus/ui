@@ -16,7 +16,7 @@ export interface PartOwner {
 }
 
 /** What `authoredIds()` hands Zag: a name, or a function of the value. */
-export type AuthoredIds = Record<string, string | ((value: string) => string | undefined)>;
+export type AuthoredIds = Record<string, string | ((value: string | number) => string | undefined)>;
 
 /** Anything the root renders in its pass. */
 export interface Renderable<TApi> {
@@ -184,13 +184,14 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
    * closing over the map is what lets an item connected after the first frame
    * still be named by the consumer. Zag falls back to its own name when the
    * function returns `undefined`, so an item without an authored id costs
-   * nothing.
+   * nothing. The value is a string or a number: the date picker keys its
+   * inputs by index.
    */
   protected authoredIds(): AuthoredIds | undefined {
     const ids: AuthoredIds = Object.fromEntries(this.#partIds);
 
     for (const key of this.valueKeyedIds) {
-      ids[key] = (value) => this.#valueIds.get(key)?.get(value);
+      ids[key] = (value) => this.#valueIds.get(key)?.get(String(value));
     }
 
     return Object.keys(ids).length > 0 ? ids : undefined;

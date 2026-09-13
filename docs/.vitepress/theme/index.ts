@@ -28,6 +28,7 @@ export default {
       import("../../../src/popover/index");
       import("../../../src/tabs/index");
       import("../../../src/timer/index");
+      import("../../../src/date-picker/index");
     }
   },
 } satisfies Theme;

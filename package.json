@@ -22,6 +22,10 @@
       "types": "./dist/carousel/index.d.ts",
       "default": "./dist/carousel/index.js"
     },
+    "./date-picker": {
+      "types": "./dist/date-picker/index.d.ts",
+      "default": "./dist/date-picker/index.js"
+    },
     "./dialog": {
       "types": "./dist/dialog/index.d.ts",
       "default": "./dist/dialog/index.js"
@@ -71,6 +75,7 @@
     "@zag-js/anatomy": "^1.43.3",
     "@zag-js/carousel": "^1.43.3",
     "@zag-js/core": "^1.43.3",
+    "@zag-js/date-picker": "^1.43.3",
     "@zag-js/dialog": "^1.43.3",
     "@zag-js/dom-query": "^1.43.3",
     "@zag-js/marquee": "^1.43.3",

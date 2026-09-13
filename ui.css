@@ -331,6 +331,40 @@
     display: block;
   }
 
+  /* Date picker. Containers, so a class written on one behaves normally. */
+  ui-date-picker,
+  ui-date-picker-control,
+  ui-date-picker-view-control,
+  ui-date-picker-table {
+    display: block;
+  }
+
+  /* Zag writes `hidden` on every view but the current one, and on the content
+     while closed, and `[hidden] { display: none }` is a USER AGENT rule, so
+     each display rule here needs the guard. */
+  ui-date-picker-view:not([hidden]),
+  ui-date-picker-content:not([hidden]):not([delegate]) {
+    display: block;
+  }
+
+  /* floating-ui owns part of this element's inline style, as it does on the
+     popover's positioner. Do not write `transform`, `top` or `left` on it. */
+  ui-date-picker-positioner {
+    display: block;
+  }
+
+  /* Text in a button, so inline. */
+  ui-date-picker-range-text {
+    display: inline;
+  }
+
+  /* Before upgrade there is no `hidden` on the content yet, so the calendar
+     would paint open and then vanish. `default-open` and `inline` are meant to
+     be visible on first paint, the one case where the guard would be wrong. */
+  ui-date-picker:not(:defined):not([default-open]):not([inline]) ui-date-picker-positioner {
+    display: none;
+  }
+
   /* Timer. Containers, so a class written on one behaves normally. Zag writes
      `hidden` on an action trigger by state, and `[hidden] { display: none }`
      is a USER AGENT rule, so the display rule for it needs the guard. */
@@ -428,6 +462,30 @@
   ui-timer-item-label[delegate],
   ui-timer-separator[delegate],
   ui-timer-action-trigger[delegate],
+  ui-date-picker[delegate],
+  ui-date-picker-label[delegate],
+  ui-date-picker-control[delegate],
+  ui-date-picker-input[delegate],
+  ui-date-picker-trigger[delegate],
+  ui-date-picker-clear-trigger[delegate],
+  ui-date-picker-positioner[delegate],
+  ui-date-picker-content[delegate],
+  ui-date-picker-view[delegate],
+  ui-date-picker-view-control[delegate],
+  ui-date-picker-view-trigger[delegate],
+  ui-date-picker-prev-trigger[delegate],
+  ui-date-picker-next-trigger[delegate],
+  ui-date-picker-range-text[delegate],
+  ui-date-picker-table[delegate],
+  ui-date-picker-table-head[delegate],
+  ui-date-picker-table-body[delegate],
+  ui-date-picker-table-row[delegate],
+  ui-date-picker-table-header[delegate],
+  ui-date-picker-table-cell[delegate],
+  ui-date-picker-table-cell-trigger[delegate],
+  ui-date-picker-month-select[delegate],
+  ui-date-picker-year-select[delegate],
+  ui-date-picker-preset-trigger[delegate],
   ui-popover[delegate],
   ui-popover-anchor[delegate],
   ui-popover-trigger[delegate],

@@ -57,6 +57,7 @@ export default defineConfig({
           { text: "Popover", link: "/components/popover" },
           { text: "Tabs", link: "/components/tabs" },
           { text: "Timer", link: "/components/timer" },
+          { text: "Date Picker", link: "/components/date-picker" },
         ],
       },
     ],

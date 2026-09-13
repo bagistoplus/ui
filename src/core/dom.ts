@@ -72,7 +72,7 @@ export function listAttribute(value: string | null): string[] | undefined {
  * `{name}` placeholders in a translation, filled from `values`. Anything else
  * in the string, an unknown name included, is left alone.
  */
-export function interpolate(template: string, values: Record<string, number>): string {
+export function interpolate(template: string, values: Record<string, string | number>): string {
   return template.replace(/\{(\w+)\}/g, (match, key: string) => (key in values ? String(values[key]) : match));
 }
 

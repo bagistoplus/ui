@@ -28,6 +28,15 @@
   margin-top: 0;
 }
 
+/*
+ * The date picker's grid is a real table, and VitePress styles every table in
+ * prose as a data table: borders, zebra rows, padding, a bold header. Rolled
+ * back to the layered styles, so the templates' own classes decide.
+ */
+.component-example-preview ui-date-picker-table :is(table, thead, tbody, tr, th, td) {
+  all: revert-layer;
+}
+
 /* ============================================
    Brand Colors
    ============================================ */
