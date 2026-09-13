@@ -30,6 +30,7 @@ Each component is its own entry point, so you ship only what you use.
 | Timer | `@bagistoplus/ui/timer` | `ui-timer`, `ui-timer-area`, `ui-timer-control`, `ui-timer-item`, `ui-timer-item-value`, `ui-timer-item-label`, `ui-timer-separator`, `ui-timer-action-trigger` |
 | Date Picker | `@bagistoplus/ui/date-picker` | `ui-date-picker`, `ui-date-picker-label`, `ui-date-picker-control`, `ui-date-picker-input`, `ui-date-picker-trigger`, `ui-date-picker-clear-trigger`, `ui-date-picker-positioner`, `ui-date-picker-content`, `ui-date-picker-view`, `ui-date-picker-view-control`, `ui-date-picker-view-trigger`, `ui-date-picker-prev-trigger`, `ui-date-picker-next-trigger`, `ui-date-picker-range-text`, `ui-date-picker-table`, `ui-date-picker-month-select`, `ui-date-picker-year-select`, `ui-date-picker-preset-trigger`, plus the six grid parts the table writes |
 | Image Zoom | `@bagistoplus/ui/image-zoom` | `ui-image-zoom`, `ui-image-zoom-viewport`, `ui-image-zoom-image`, `ui-image-zoom-increment-trigger`, `ui-image-zoom-decrement-trigger`, `ui-image-zoom-reset-trigger` |
+| Slider | `@bagistoplus/ui/slider` | `ui-slider`, `ui-slider-label`, `ui-slider-control`, `ui-slider-track`, `ui-slider-range`, `ui-slider-thumb`, `ui-slider-hidden-input`, `ui-slider-value-text`, `ui-slider-marker-group`, `ui-slider-marker`, `ui-slider-dragging-indicator` |
 
 The examples below use the accordion. Everything they show about `delegate`, styling and the api applies to every component.
 

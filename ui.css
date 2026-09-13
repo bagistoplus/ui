@@ -374,6 +374,32 @@
     display: block;
   }
 
+  /* Slider. Zag positions the thumb, the range and each marker absolutely
+     against the control, and writes the offsets as custom properties on the
+     root, so every one of them is a real box. The thumbs must sit inside the
+     control: that is where Zag looks for them to measure their size. */
+  ui-slider,
+  ui-slider-control,
+  ui-slider-track,
+  ui-slider-range,
+  ui-slider-thumb,
+  ui-slider-marker-group,
+  ui-slider-marker {
+    display: block;
+  }
+
+  /* Zag writes `hidden` here while its thumb is not dragging, and
+     `[hidden] { display: none }` is a USER AGENT rule, so the guard. */
+  ui-slider-dragging-indicator:not([hidden]):not([delegate]) {
+    display: block;
+  }
+
+  /* Text in a line: the label beside the value text. */
+  ui-slider-label,
+  ui-slider-value-text {
+    display: inline;
+  }
+
   /* Timer. Containers, so a class written on one behaves normally. Zag writes
      `hidden` on an action trigger by state, and `[hidden] { display: none }`
      is a USER AGENT rule, so the display rule for it needs the guard. */
@@ -501,6 +527,17 @@
   ui-image-zoom-increment-trigger[delegate],
   ui-image-zoom-decrement-trigger[delegate],
   ui-image-zoom-reset-trigger[delegate],
+  ui-slider[delegate],
+  ui-slider-label[delegate],
+  ui-slider-control[delegate],
+  ui-slider-track[delegate],
+  ui-slider-range[delegate],
+  ui-slider-thumb[delegate],
+  ui-slider-hidden-input[delegate],
+  ui-slider-value-text[delegate],
+  ui-slider-marker-group[delegate],
+  ui-slider-marker[delegate],
+  ui-slider-dragging-indicator[delegate],
   ui-popover[delegate],
   ui-popover-anchor[delegate],
   ui-popover-trigger[delegate],

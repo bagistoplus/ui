@@ -30,6 +30,7 @@ export default {
       import("../../../src/timer/index");
       import("../../../src/date-picker/index");
       import("../../../src/image-zoom/index");
+      import("../../../src/slider/index");
     }
   },
 } satisfies Theme;

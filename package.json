@@ -54,6 +54,10 @@
       "types": "./dist/popover/index.d.ts",
       "default": "./dist/popover/index.js"
     },
+    "./slider": {
+      "types": "./dist/slider/index.d.ts",
+      "default": "./dist/slider/index.js"
+    },
     "./tabs": {
       "types": "./dist/tabs/index.d.ts",
       "default": "./dist/tabs/index.js"
@@ -88,6 +92,7 @@
     "@zag-js/number-input": "^1.43.3",
     "@zag-js/popover": "^1.43.3",
     "@zag-js/presence": "^1.43.3",
+    "@zag-js/slider": "^1.43.3",
     "@zag-js/tabs": "^1.43.3",
     "@zag-js/timer": "^1.43.3",
     "@zag-js/types": "^1.43.3",
