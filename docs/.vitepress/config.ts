@@ -58,6 +58,7 @@ export default defineConfig({
           { text: "Tabs", link: "/components/tabs" },
           { text: "Timer", link: "/components/timer" },
           { text: "Date Picker", link: "/components/date-picker" },
+          { text: "Image Zoom", link: "/components/image-zoom" },
         ],
       },
     ],

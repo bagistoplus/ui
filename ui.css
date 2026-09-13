@@ -365,6 +365,15 @@
     display: none;
   }
 
+  /* Image zoom. The viewport is the box a pointer is measured against and
+     the box that clips the scaled image, so it is a real box. The image part
+     is a block so a transform on it, when it is not delegated, moves a box. */
+  ui-image-zoom,
+  ui-image-zoom-viewport,
+  ui-image-zoom-image {
+    display: block;
+  }
+
   /* Timer. Containers, so a class written on one behaves normally. Zag writes
      `hidden` on an action trigger by state, and `[hidden] { display: none }`
      is a USER AGENT rule, so the display rule for it needs the guard. */
@@ -486,6 +495,12 @@
   ui-date-picker-month-select[delegate],
   ui-date-picker-year-select[delegate],
   ui-date-picker-preset-trigger[delegate],
+  ui-image-zoom[delegate],
+  ui-image-zoom-viewport[delegate],
+  ui-image-zoom-image[delegate],
+  ui-image-zoom-increment-trigger[delegate],
+  ui-image-zoom-decrement-trigger[delegate],
+  ui-image-zoom-reset-trigger[delegate],
   ui-popover[delegate],
   ui-popover-anchor[delegate],
   ui-popover-trigger[delegate],

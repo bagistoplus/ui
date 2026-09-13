@@ -5,6 +5,8 @@ import { getEventPoint, getRelativePoint, trackPointerMove } from "@zag-js/dom-q
 import type { Scope, Service } from "@zag-js/core";
 import type { JSX, NormalizeProps, PropTypes, RequiredBy } from "@zag-js/types";
 
+import { capturePointer, isInteractiveTarget, releasePointer } from "../core/pointer";
+
 /**
  * A machine of the package's own, in Zag's shape. Zag ships no comparison
  * component, so this file is what `@zag-js/before-after` would be: an anatomy,
@@ -202,7 +204,7 @@ export function connect(service: Service<Schema>, normalize: NormalizeProps<Prop
           touchAction: "none",
         },
         onPointerDown(event: JSX.PointerEvent<HTMLElement>) {
-          if (disabled || isFromHandle(scope, event.target) || isFromInteractiveChild(event.target)) {
+          if (disabled || isFromHandle(scope, event.target) || isInteractiveTarget(event.target)) {
             return;
           }
 
@@ -303,22 +305,6 @@ export function connect(service: Service<Schema>, normalize: NormalizeProps<Prop
   };
 }
 
-const interactiveSelector = [
-  "a[href]",
-  "button",
-  "input",
-  "select",
-  "textarea",
-  "summary",
-  "[contenteditable=true]",
-  "[role=button]",
-  "[role=link]",
-  "[role=menuitem]",
-  "[role=option]",
-  "[role=switch]",
-  "[role=tab]",
-].join(",");
-
 interface KeyContext {
   dir: Direction;
   orientation: Orientation;
@@ -382,31 +368,8 @@ function valueFromPoint(
   return clamp(relative.getPercentValue({ dir, orientation }) * 100);
 }
 
-/**
- * A synthetic pointer has no active pointer to capture, and the browser throws
- * for it. The capture only matters for a pointer that leaves the window mid
- * drag, so losing it is not worth an exception.
- */
-function capturePointer(handle: Element, pointerId: number): void {
-  try {
-    handle.setPointerCapture(pointerId);
-  } catch {
-    // Not captured.
-  }
-}
-
-function releasePointer(handle: Element, pointerId: number): void {
-  if (handle.hasPointerCapture(pointerId)) {
-    handle.releasePointerCapture(pointerId);
-  }
-}
-
 function isFromHandle(scope: Scope, target: EventTarget | null): boolean {
   return target instanceof Node ? Boolean(dom.getHandleEl(scope)?.contains(target)) : false;
-}
-
-function isFromInteractiveChild(target: EventTarget | null): boolean {
-  return target instanceof Element ? Boolean(target.closest(interactiveSelector)) : false;
 }
 
 function beforeClipPath(value: number, orientation: Orientation, dir: Direction): string {

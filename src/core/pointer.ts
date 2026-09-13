@@ -1,0 +1,43 @@
+/**
+ * Pointer helpers shared by the machines the package writes itself.
+ */
+
+const interactiveSelector = [
+  "a[href]",
+  "button",
+  "input",
+  "select",
+  "textarea",
+  "summary",
+  "[contenteditable=true]",
+  "[role=button]",
+  "[role=link]",
+  "[role=menuitem]",
+  "[role=option]",
+  "[role=switch]",
+  "[role=tab]",
+].join(",");
+
+/**
+ * A synthetic pointer has no active pointer to capture, and the browser throws
+ * for it. The capture only matters for a pointer that leaves the window mid
+ * drag, so losing it is not worth an exception.
+ */
+export function capturePointer(el: Element, pointerId: number): void {
+  try {
+    el.setPointerCapture(pointerId);
+  } catch {
+    // Not captured.
+  }
+}
+
+export function releasePointer(el: Element, pointerId: number): void {
+  if (el.hasPointerCapture(pointerId)) {
+    el.releasePointerCapture(pointerId);
+  }
+}
+
+/** A press that starts on a control belongs to that control, not to the surface around it. */
+export function isInteractiveTarget(target: EventTarget | null): boolean {
+  return target instanceof Element ? Boolean(target.closest(interactiveSelector)) : false;
+}

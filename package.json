@@ -30,6 +30,10 @@
       "types": "./dist/dialog/index.d.ts",
       "default": "./dist/dialog/index.js"
     },
+    "./image-zoom": {
+      "types": "./dist/image-zoom/index.d.ts",
+      "default": "./dist/image-zoom/index.js"
+    },
     "./marquee": {
       "types": "./dist/marquee/index.d.ts",
       "default": "./dist/marquee/index.js"
