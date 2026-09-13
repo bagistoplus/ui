@@ -3,8 +3,10 @@
 ## Install
 
 ```sh
-npm install @bagistoplus/ui
+npm install github:bagistoplus/ui
 ```
+
+The package is installed from its repository, not from the npm registry, and the lock file pins the commit. The built `dist` is committed there, so nothing builds on install.
 
 ## Import a component
 
