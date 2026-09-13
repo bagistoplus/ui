@@ -214,7 +214,6 @@ npx playwright install chromium
 npm run dev         # the documentation site, with live demos
 npm test            # Vitest in real Chromium
 npm run typecheck
-npm run build       # the package
 npm run docs:build  # the site
 ```
 

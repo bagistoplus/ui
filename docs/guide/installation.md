@@ -6,7 +6,7 @@
 npm install github:bagistoplus/ui
 ```
 
-The package is installed from its repository, not from the npm registry, and the lock file pins the commit. The built `dist` is committed there, so nothing builds on install.
+The package is installed from its repository, not from the npm registry, and the lock file pins the commit. It ships its TypeScript source, so it needs a bundler that compiles TypeScript, as Vite, esbuild and webpack do. Nothing builds on install.
 
 ## Import a component
 
