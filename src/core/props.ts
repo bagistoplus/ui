@@ -22,7 +22,13 @@ interface Applied {
 
 const applied = new WeakMap<Element, Map<string, Applied>>();
 
-const PROPERTIES = new Set(["value", "checked", "selected", "defaultValue", "defaultChecked"]);
+const PROPERTIES = new Set([
+  "value",
+  "checked",
+  "selected",
+  "defaultValue",
+  "defaultChecked",
+]);
 
 export function applyProps(el: Element, props: Props, scope: string): void {
   let scopes = applied.get(el);
@@ -35,7 +41,12 @@ export function applyProps(el: Element, props: Props, scope: string): void {
   let record = scopes.get(scope);
 
   if (!record) {
-    record = { attributes: new Set(), styles: new Set(), listeners: new Map(), props };
+    record = {
+      attributes: new Set(),
+      styles: new Set(),
+      listeners: new Map(),
+      props,
+    };
     scopes.set(scope, record);
   }
 
@@ -129,7 +140,11 @@ function bind(el: Element, record: Applied, key: string): void {
  * back. The values we did not write stay gone, which is what `api.reposition()`
  * is for.
  */
-function applyStyle(el: HTMLElement, style: unknown, previous: Set<string>): Set<string> {
+function applyStyle(
+  el: HTMLElement,
+  style: unknown,
+  previous: Set<string>,
+): Set<string> {
   // A string already replaced the whole attribute, so nothing we set before it
   // is left to remove.
   if (typeof style === "string") {
@@ -166,7 +181,9 @@ function applyStyle(el: HTMLElement, style: unknown, previous: Set<string>): Set
 
 /** Custom properties pass through untouched; everything else is camelCase. */
 function cssName(key: string): string {
-  return key.startsWith("--") ? key : key.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
+  return key.startsWith("--")
+    ? key
+    : key.replace(/[A-Z]/g, (char) => `-${char.toLowerCase()}`);
 }
 
 function write(el: Element, key: string, value: unknown): void {

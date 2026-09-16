@@ -1,7 +1,7 @@
 import type { VanillaMachine } from "@zag-js/vanilla";
 
 import { Delegate } from "./delegate";
-import { boolAttribute } from "./dom";
+import { boolAttribute, REPAIR_MARKER } from "./dom";
 
 type Props = Record<string, unknown>;
 
@@ -97,8 +97,19 @@ export abstract class ZagRootElement<TProps, TApi> extends HTMLElement implement
     });
   }
 
-  attributeChangedCallback(): void {
+  attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null): void {
     if (!this.#machine) {
+      return;
+    }
+
+    // A differ removing the marker changed no prop the machine was built from,
+    // so this is a render and not a `pushProps`. Its return is the repair
+    // landing, which would otherwise render a second time for nothing.
+    if (name === REPAIR_MARKER) {
+      if (newValue === null) {
+        this.scheduleRender();
+      }
+
       return;
     }
 

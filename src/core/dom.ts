@@ -72,8 +72,13 @@ export function listAttribute(value: string | null): string[] | undefined {
  * `{name}` placeholders in a translation, filled from `values`. Anything else
  * in the string, an unknown name included, is left alone.
  */
-export function interpolate(template: string, values: Record<string, string | number>): string {
-  return template.replace(/\{(\w+)\}/g, (match, key: string) => (key in values ? String(values[key]) : match));
+export function interpolate(
+  template: string,
+  values: Record<string, string | number>,
+): string {
+  return template.replace(/\{(\w+)\}/g, (match, key: string) =>
+    key in values ? String(values[key]) : match,
+  );
 }
 
 export function readDirection(el: Element): "ltr" | "rtl" {
@@ -90,10 +95,25 @@ export function readLocale(el: Element): string | undefined {
 }
 
 /**
+ * The attribute an externally wiped element is recognised by.
+ *
+ * Zag writes `data-scope` on every part and never removes it, so a removal can
+ * only mean something outside the package edited the DOM. A DOM differ strips
+ * every attribute the server did not send, which is all of Zag's, and the
+ * element is then visible, untargetable by Zag's own queries, and out of step
+ * with a machine that has not changed state. Nothing else removes it, which is
+ * what makes it an unambiguous signal rather than a heuristic.
+ */
+export const REPAIR_MARKER = "data-scope";
+
+/**
  * Custom element names are a global registry. Losing the race is silent unless
  * we say so, and a silent loss looks like the package simply not working.
  */
-export function defineElement(name: string, ctor: CustomElementConstructor): void {
+export function defineElement(
+  name: string,
+  ctor: CustomElementConstructor,
+): void {
   const existing = customElements.get(name);
 
   if (existing === ctor) {
@@ -108,5 +128,21 @@ export function defineElement(name: string, ctor: CustomElementConstructor): voi
     return;
   }
 
+  observeRepairMarker(ctor);
+
   customElements.define(name, ctor);
+}
+
+/**
+ * Makes the browser report the marker's removal through `attributeChangedCallback`.
+ */
+function observeRepairMarker(ctor: CustomElementConstructor): void {
+  const declared =
+    (ctor as { observedAttributes?: readonly string[] }).observedAttributes ??
+    [];
+
+  Object.defineProperty(ctor, "observedAttributes", {
+    value: [...new Set([...declared, REPAIR_MARKER])],
+    configurable: true,
+  });
 }

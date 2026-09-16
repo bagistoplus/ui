@@ -89,9 +89,9 @@ export class UICarousel extends ZagRootElement<carousel.Props, carousel.Api> {
     });
   }
 
-  override attributeChangedCallback(): void {
+  override attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
     this.#tiers.watch();
-    super.attributeChangedCallback();
+    super.attributeChangedCallback(name, oldValue, newValue);
   }
 
   protected createMachine(props: () => carousel.Props): VanillaMachine<any> {

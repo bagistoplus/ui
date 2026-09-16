@@ -75,9 +75,9 @@ export class UIMarquee extends ZagRootElement<marquee.Props, marquee.Api> {
     });
   }
 
-  override attributeChangedCallback(): void {
+  override attributeChangedCallback(name: string, oldValue: string | null, newValue: string | null): void {
     this.#tiers.watch();
-    super.attributeChangedCallback();
+    super.attributeChangedCallback(name, oldValue, newValue);
   }
 
   protected createMachine(props: () => marquee.Props): VanillaMachine<any> {

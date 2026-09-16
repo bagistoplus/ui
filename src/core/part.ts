@@ -1,5 +1,5 @@
 import { Delegate } from "./delegate";
-import { findBranded } from "./dom";
+import { findBranded, REPAIR_MARKER } from "./dom";
 import type { PartOwner, Renderable } from "./root";
 
 type Props = Record<string, unknown>;
@@ -88,7 +88,15 @@ export abstract class ZagPart<TApi, TOwner extends PartOwner>
     });
   }
 
-  attributeChangedCallback(): void {
+  attributeChangedCallback(name: string, _oldValue: string | null, newValue: string | null): void {
+    // The marker going missing means a DOM differ has just stripped every
+    // attribute the server did not send from this element. `applyProps`
+    // compares against the live DOM, so one render puts all of them back.
+    // Its return is that repair landing, not news.
+    if (name === REPAIR_MARKER && newValue !== null) {
+      return;
+    }
+
     this.scheduleRender();
   }
 
