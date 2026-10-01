@@ -90,6 +90,14 @@ const extractHtmlFromSlot = (): string => {
         return !key.startsWith('_') && key !== 'key' && key !== 'ref' && typeof value !== 'symbol'
       })
       .map(([key, value]) => {
+        // Vue compiles a static `style="..."` into an object, so write it back
+        if (key === 'style' && value && typeof value === 'object') {
+          const declarations = Object.entries(value)
+            .map(([property, declaration]) => `${property}: ${declaration}`)
+            .join('; ')
+          return declarations ? `style="${declarations}"` : null
+        }
+
         // Skip non-primitive values (functions, objects, symbols)
         if (typeof value === 'function' || typeof value === 'object' || typeof value === 'symbol') {
           return null
