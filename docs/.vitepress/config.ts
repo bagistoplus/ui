@@ -49,6 +49,7 @@ export default defineConfig({
           { text: "Accordion", link: "/components/accordion" },
           { text: "Before After", link: "/components/before-after" },
           { text: "Carousel", link: "/components/carousel" },
+          { text: "Collapsible", link: "/components/collapsible" },
           { text: "Dialog", link: "/components/dialog" },
           { text: "Marquee", link: "/components/marquee" },
           { text: "Menu", link: "/components/menu" },

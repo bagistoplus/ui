@@ -297,6 +297,33 @@ th {
   }
 }
 
+/* ============================================
+   The collapsible animation recipe, for its demos.
+   Documented on the Collapsible page; lives here so the demos actually animate.
+   ============================================ */
+@theme {
+  --animate-collapsible-down: collapsible-down 220ms ease-out;
+  --animate-collapsible-up: collapsible-up 220ms ease-out;
+}
+
+@keyframes collapsible-down {
+  from {
+    height: var(--collapsed-height, 0);
+  }
+  to {
+    height: var(--height);
+  }
+}
+
+@keyframes collapsible-up {
+  from {
+    height: var(--height);
+  }
+  to {
+    height: var(--collapsed-height, 0);
+  }
+}
+
 .ui-doc-fade[data-state="open"] {
   animation: popover-in 150ms ease-out;
 }
