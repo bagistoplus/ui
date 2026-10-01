@@ -31,6 +31,7 @@ export default {
       import("../../../src/date-picker/index");
       import("../../../src/image-zoom/index");
       import("../../../src/slider/index");
+      import("../../../src/rating/index");
     }
   },
 } satisfies Theme;

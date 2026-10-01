@@ -400,6 +400,23 @@
     display: inline;
   }
 
+  /* Rating. Containers, so a class written on one behaves normally. Each item
+     holds an icon and sits in the control's row, so it is an inline box. The
+     items must sit inside the control: that is where Zag looks for one to
+     focus. */
+  ui-rating,
+  ui-rating-control {
+    display: block;
+  }
+
+  ui-rating-item {
+    display: inline-flex;
+  }
+
+  ui-rating-label {
+    display: inline;
+  }
+
   /* Timer. Containers, so a class written on one behaves normally. Zag writes
      `hidden` on an action trigger by state, and `[hidden] { display: none }`
      is a USER AGENT rule, so the display rule for it needs the guard. */
@@ -538,6 +555,11 @@
   ui-slider-marker-group[delegate],
   ui-slider-marker[delegate],
   ui-slider-dragging-indicator[delegate],
+  ui-rating[delegate],
+  ui-rating-label[delegate],
+  ui-rating-control[delegate],
+  ui-rating-item[delegate],
+  ui-rating-hidden-input[delegate],
   ui-popover[delegate],
   ui-popover-anchor[delegate],
   ui-popover-trigger[delegate],

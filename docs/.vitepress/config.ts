@@ -55,6 +55,7 @@ export default defineConfig({
           { text: "Navigation Menu", link: "/components/navigation-menu" },
           { text: "Number Input", link: "/components/number-input" },
           { text: "Popover", link: "/components/popover" },
+          { text: "Rating", link: "/components/rating" },
           { text: "Tabs", link: "/components/tabs" },
           { text: "Timer", link: "/components/timer" },
           { text: "Date Picker", link: "/components/date-picker" },
